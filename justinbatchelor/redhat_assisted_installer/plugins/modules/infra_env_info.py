@@ -19,32 +19,35 @@ version_added: "1.0.0"
 description: Module that implements the 'redhat-assisted-installer' python package to provide an easier way to communicate with the red hat assisted installer api
 
 options:
+    infra_env_id:
+      description:
+      - ID for the assisted installer managed infrastructure environment
+      type: str
+      default: None
+      required: False
 
 author:
     - Justin Batchelor (@justinbatchelor)
 '''
 
 EXAMPLES = r'''
-- name: Task to use custom module to get all infra_env objects
+- name: Task to get all infra_env objects
     justinbatchelor.redhat_assisted_installer.infra_env_info:
     register: infra_envs
 
-- debug:
-    msg: "{{ infra_envs }}"
 
-- name: Task to use custom module to get a specific infra_env
-    justinbatchelor.redhat_assisted_installer.infra:
+
+- name: Task to get a specific infra_env
+    justinbatchelor.redhat_assisted_installer.infra_env_info:
         infra_env_id: "2c478929-bdec-4c02-9bcf-xxxxxxxxxxxx"
     register: hosts
 '''
 
 RETURN = r'''
-infra_env_info:
-    description:
-    - The returned object or objects from the assisted installer api that represents infrastructure environments
-    returned: success
-    type: list / elements
-    contains:
+
+result:
+    changed: <bool>
+    infra_env_info: List<infra_env>
 
 '''
 
@@ -88,7 +91,7 @@ def run_module():
     if module.params['infra_env_id'] is None:
         result['infra_env_info'] = installer.get_infrastructure_environements()
     else:
-        result['infra_env_info'] = installer.get_infrastructure_environement(infra_env_id=module.params['infra_env_id'])
+        result['infra_env_info'] = installer.get_infrastructure_environements(infra_env_id=module.params['infra_env_id'])
     
 
 

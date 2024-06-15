@@ -12,14 +12,26 @@ DOCUMENTATION = r'''
 ---
 module: host_info
 
-short_description: Module to communicatee with the red hat assisted installer to get information about all or specific openshift agents 
+short_description: Module to communicate with the red hat assisted installer to get information about all or specific openshift agents 
 
 version_added: "1.0.0"
 
 description: 
 
 options:
+    infra_env_id:
+      description:
+      - ID for the assisted installer managed infrastructure environment
+      type: str
+      default: None
+      required: True
 
+    host_id:
+      description:
+      - ID for the assisted installer managed host associated with the infra_env_id
+      type: str
+      default: None
+      required: False
 
 author:
     - Justin Batchelor (@justinbatchelor)
@@ -52,12 +64,9 @@ EXAMPLES = r'''
 '''
 
 RETURN = r'''
-host_info:
-    description:
-    - The returned object or objects from the assisted installer api that represent hosts
-    returned: success
-    type: list / elements
-    contains:
+result:
+    changed: <bool>
+    host_info: List<host>
 '''
 
 

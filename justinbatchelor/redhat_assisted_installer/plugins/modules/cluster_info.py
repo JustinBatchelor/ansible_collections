@@ -28,34 +28,39 @@ options:
       default: None
       required: False
 
+requirements:
+  - "python >= 3.12"
+  - "requirements.txt"
+
+
 author:
     - Justin Batchelor (@justinbatchelor)
 '''
 
 EXAMPLES = r'''
+# Implements the /v2/clusters/ endpoint with default query parameters and returns a list of all clusters
 - name: Task to use custom module with no arguments
-    justinbatchelor.redhat_assisted_installer.cluster_info:
-    register: all_cluster_info
+  justinbatchelor.redhat_assisted_installer.cluster_info:
+  register: all_cluster_info
 
 - debug:
     msg: "{{ all_cluster_info }}"
 
-- debug:
-    msg: "{{ all_cluster_info['cluster_info'] }}"
 
+# Implements the /v2/clusters/{cluster_id} endpoint and returns a list containing that cluster if it exists
 - name: Task to use custom module with argument
-    justinbatchelor.redhat_assisted_installer.cluster_info:
+  justinbatchelor.redhat_assisted_installer.cluster_info:
     cluster_id: '{{ all_cluster_info["cluster_info"][0]["id"] }}'
-    register: cluster_info
-
+  register: cluster_info
 
 - debug:
     msg: "{{ cluster_info['cluster_info'][0] }}"
-
 '''
 
 RETURN = r'''
-cluster_info
+result:
+  changed: <bool>
+  cluster_info: List<Cluster>
 '''
 
 
