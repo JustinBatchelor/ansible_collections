@@ -13,11 +13,34 @@ A list of required packages can be found in the `requirements.txt` file. You can
 
 ### Environment Variables
 
-You mush have the following environment variables set in the execution environment before you can successfully use the collection.
+You must have the following environment variables set in before you can successfully use the collection. Some modules and functions in this collection may not require the use of the `REDHAT_PULL_SECRET`. However, all modules will require the `REDHAT_OFFLINE_TOKEN`
 
 - `REDHAT_PULL_SECRET`: The pull secret associated with your RedHat Hybrid Cloud account
 
 - `REDHAT_OFFLINE_TOKEN`: The offline token associated with your RedHat Hybrid Cloud account
 
 
+## How To Use
 
+### Install Collection
+
+**Option 1**
+
+You can install the collection by using the following command 
+
+    ansible-galaxy collection install git+https://github.com/JustinBatchelor/ansible_collections.git#/justinbatchelor/redhat_assisted_installer
+
+**Option 2**
+
+This repo also provides a `requirements.yaml` file you can copy and then run the following command
+        
+    ansible-galaxy collection install -r requirements.yaml
+
+
+### Modules Available
+
+To learn more about how to use a specific module, please refer to `./plugins/modules/README.md` for more detailed information.
+
+- `cluster_info`
+- `host_info`
+- `infra_env_info`

@@ -1,0 +1,4 @@
+collections:
+  - name: https://github.com/JustinBatchelor/ansible_collections.git#/justinbatchelor/redhat_assisted_installer
+    type: git
+    version: main
