@@ -1,0 +1,22 @@
+- name: Playbook to test the cluster_info plugin module
+  hosts: localhost
+  tasks:
+    - name: Task to use custom module with no arguments
+      justinbatchelor.redhat_assisted_installer.cluster_info:
+      register: all_cluster_info
+
+    - debug:
+        msg: "{{ all_cluster_info }}"
+
+    - debug:
+        msg: "{{ all_cluster_info['cluster_info'] }}"
+
+    - name: Task to use custom module with argument
+      justinbatchelor.redhat_assisted_installer.cluster_info:
+        cluster_id: '{{ all_cluster_info["cluster_info"][0]["id"] }}'
+      register: cluster_info
+
+
+    - debug:
+        msg: "{{ cluster_info['cluster_info'][0] }}"
+

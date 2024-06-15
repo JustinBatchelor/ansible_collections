@@ -1,0 +1,30 @@
+- name: Playbook to test the host_info plugin module
+  hosts: localhost
+  tasks:
+  
+    - name: Task to use custom module to get infra_env objects
+      justinbatchelor.redhat_assisted_installer.infra_env_info:
+      register: infra_envs
+
+    - debug:
+        msg: "{{ infra_envs }}"
+
+    - debug:
+        msg: "{{ infra_envs }}"
+
+    - name: Task to use custom module to get all hosts info from infra_env
+      justinbatchelor.redhat_assisted_installer.host_info:
+        infra_env_id: "{{ infra_envs['infra_env_info'][0]['id'] }}"
+      register: hosts
+
+    - debug:
+        msg: "{{ hosts }}"
+
+    - name: Task to use custom module to get specific host info 
+      justinbatchelor.redhat_assisted_installer.host_info:
+        infra_env_id: "{{ infra_envs['infra_env_info'][0]['id'] }}"
+        host_id: "{{ hosts['host_info'][0]['id'] }}"
+      register: host
+
+    - debug:
+        msg: "{{ host['host_info'][0]['id'] }}"
