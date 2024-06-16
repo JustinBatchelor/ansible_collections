@@ -6,6 +6,8 @@ from __future__ import (absolute_import, division, print_function)
 from ansible.module_utils.basic import AnsibleModule
 from redhat_assisted_installer import assisted_installer
 import json
+from requests.exceptions import HTTPError
+
 __metaclass__ = type
 
 DOCUMENTATION = r'''
