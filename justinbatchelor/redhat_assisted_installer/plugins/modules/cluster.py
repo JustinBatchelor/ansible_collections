@@ -145,6 +145,10 @@ def run_module():
     # create installer object that implements the RH assisted installer API
     installer = assisted_installer.assisted_installer()
 
+    os.environ["REDHAT_PULL_SECRET"] = module.params["pull_secret"] if module.params["pull_secret"] is not None else os.environ.get("REDHAT_PULL_SECRET")
+
+    os.environ["REDHAT_OFFLINE_TOKEN"] = module.params["offline_token"] if module.params["offline_token"] is not None else os.environ.get("REDHAT_OFFLINE_TOKEN")
+
     # If the state is present, we will need to consider create or update
     if module.params['state'] == 'present':
         # If user did not specifiy either cluster_id or name we need to fail, as a name is required to create a cluster
@@ -189,8 +193,10 @@ def run_module():
             # no cluster exists with that name in this org, we are doing a create operation
             if len(filtered_response) == 0:
                 try: 
+
                     cluster = installer.post_cluster(name=module.params['name'], 
                                                     openshift_version=module.params['openshift_version'], 
+                                                    pull_secret= os.environ.get("REDHAT_PULL_SECRET"),
                                                     additional_ntp_source=module.params['additional_ntp_source'],
                                                     base_dns_domain=module.params['base_dns_domain'], 
                                                     luster_network_cidr=module.params['cluster_network_cidr'], 
