@@ -145,12 +145,6 @@ def run_module():
     # create installer object that implements the RH assisted installer API
     installer = assisted_installer.assisted_installer()
 
-    if module.params["pull_secret"] is not None:
-        os.environ["REDHAT_PULL_SECRET"] = module.params["pull_secret"]
-
-    if module.params["offline_token"] is not None:
-        os.environ["REDHAT_OFFLINE_TOKEN"] = module.params["offline_token"]
-
     # If the state is present, we will need to consider create or update
     if module.params['state'] == 'present':
         # If user did not specifiy either cluster_id or name we need to fail, as a name is required to create a cluster

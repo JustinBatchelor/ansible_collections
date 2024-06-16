@@ -18,7 +18,7 @@
 
     - name: Debug returned cluster
       ansible.builtin.debug:
-        msg: "{{ cluster[0] }}"
+        msg: "{{ cluster['cluster'][0] }}"
 
     # - name: Delete cluster
     #   justinbatchelor.redhat_assisted_installer.cluster:
