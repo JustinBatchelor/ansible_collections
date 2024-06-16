@@ -57,6 +57,7 @@ def run_module():
         cluster_id=dict(type='str', required=False),
         openshift_version=dict(type='str', required=False),
         pull_secret=dict(type='str', required=False, no_log=True),
+        offline_token=dict(type='str', required=False, no_log=True),
         additional_ntp_source=dict(type='str', required=False),
         # api_vips=dict(type='list', elements='dict', options=dict(
         #     ip=dict(type='str', required=True),
@@ -144,6 +145,11 @@ def run_module():
     # create installer object that implements the RH assisted installer API
     installer = assisted_installer.assisted_installer()
 
+    if module.params["pull_secret"] is not None:
+        os.environ["REDHAT_PULL_SECRET"] = module.params["pull_secret"]
+
+    if module.params["offline_token"] is not None:
+        os.environ["REDHAT_OFFLINE_TOKEN"] = module.params["offline_token"]
 
     # If the state is present, we will need to consider create or update
     if module.params['state'] == 'present':
@@ -189,12 +195,28 @@ def run_module():
             # no cluster exists with that name in this org, we are doing a create operation
             if len(filtered_response) == 0:
                 try: 
-                    cluster = installer.post_cluster(name=module.params['name'], openshift_version=module.params['openshift_version'], pull_secret=module.params['pull_secret'] if module.params["pull_secret"] is not None else os.environ.get("REDHAT_PULL_SECRET"), additional_ntp_source=module.params['additional_ntp_source'],
-                                                    base_dns_domain=module.params['base_dns_domain'], cluster_network_cidr=module.params['cluster_network_cidr'], cluster_network_host_prefix=module.params['cluster_network_host_prefix'], 
-                                                    cpu_architecture=module.params['cpu_architecture'], high_availability_mode=module.params['high_availability_mode'], 
-                                                    http_proxy=module.params['http_proxy'], https_proxy=module.params['https_proxy'], hyperthreading=module.params['hyperthreading'], network_type=module.params['network_type'], no_proxy=module.params['no_proxy'], ocp_release_image=module.params['ocp_release_image'],
-                                                    schedulable_masters=module.params['schedulable_masters'], service_network_cidr=module.params['service_network_cidr'],service_networks=module.params['service_networks'], 
-                                                    ssh_public_key=module.params['ssh_public_key'], tags=module.params['tags'], user_managed_networking=module.params['user_managed_networking'], vip_dhcp_allocation=module.params['vip_dhcp_allocation'])
+                    cluster = installer.post_cluster(name=module.params['name'], 
+                                                    openshift_version=module.params['openshift_version'], 
+                                                    additional_ntp_source=module.params['additional_ntp_source'],
+                                                    base_dns_domain=module.params['base_dns_domain'], 
+                                                    luster_network_cidr=module.params['cluster_network_cidr'], 
+                                                    cluster_network_host_prefix=module.params['cluster_network_host_prefix'], 
+                                                    cpu_architecture=module.params['cpu_architecture'], 
+                                                    high_availability_mode=module.params['high_availability_mode'], 
+                                                    http_proxy=module.params['http_proxy'], 
+                                                    https_proxy=module.params['https_proxy'], 
+                                                    hyperthreading=module.params['hyperthreading'], 
+                                                    network_type=module.params['network_type'], 
+                                                    no_proxy=module.params['no_proxy'], 
+                                                    ocp_release_image=module.params['ocp_release_image'],
+                                                    schedulable_masters=module.params['schedulable_masters'], 
+                                                    service_network_cidr=module.params['service_network_cidr'],
+                                                    service_networks=module.params['service_networks'], 
+                                                    ssh_public_key=module.params['ssh_public_key'], 
+                                                    tags=module.params['tags'], 
+                                                    user_managed_networking=module.params['user_managed_networking'], 
+                                                    vip_dhcp_allocation=module.params['vip_dhcp_allocation'],
+                                                    )
 
                     result['changed'] = True
                     result['msg'] = cluster
