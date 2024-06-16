@@ -202,9 +202,12 @@ def run_module():
                     module.exit_json(**result)
 
                 except requests.exceptions.HTTPError as e:
+                    result['changed'] = False
+                    result['msg'] = False
                     module.fail_json(msg=f'Failed to create the cluster api call return bad status code\nERR: {e}', **result)
 
                 except Exception as e:
+                    result['changed'] = False
                     module.fail_json(msg=f'Failed to create the cluster with the following exception from api\nERR: {e}', **result)
 
 
