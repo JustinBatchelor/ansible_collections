@@ -6,7 +6,7 @@ from __future__ import (absolute_import, division, print_function)
 from ansible.module_utils.basic import AnsibleModule
 from redhat_assisted_installer import assisted_installer
 from ..module_utils import tools
-import jmespath, requests, os
+import jmespath, requests, os, json
 
 from requests.exceptions import HTTPError
 
@@ -54,60 +54,24 @@ def run_module():
     module_args = dict(
         state=dict(type='str', required=True, choices=['present', 'absent']),
         name=dict(type='str', required=False),
-        cluster_id=dict(type='str', required=False, ),
+        cluster_id=dict(type='str', required=False),
         openshift_version=dict(type='str', required=False),
         pull_secret=dict(type='str', required=False, no_log=True, default=None),
         offline_token=dict(type='str', required=False, no_log=True, default=None),
         additional_ntp_source=dict(type='str', required=False),
-        # api_vips=dict(type='list', elements='dict', options=dict(
-        #     ip=dict(type='str', required=True),
-        #     netmask=dict(type='str', required=True)
-        # )),
         base_dns_domain=dict(type='str', required=False),
         cluster_network_cidr=dict(type='str', required=False),
         cluster_network_host_prefix=dict(type='int', required=False),
-        cluster_networks=dict(type='list', elements='dict', options=dict(
-            cidr=dict(type='str', required=True),
-            cluster_id=dict(type='str', required=True)
-        )),
         cpu_architecture=dict(type='str', required=False, choices=['x86_64', 'aarch64', 'arm64', 'ppc64le', 's390x']),
-        disk_encryption=dict(type='dict', options=dict(
-            enable_on=dict(type='str', required=True),
-            mode=dict(type='str', required=True),
-            tang_servers=dict(type='str', required=False),
-        )),
         high_availability_mode=dict(type='str', required=False),
         http_proxy=dict(type='str', required=False),
         https_proxy=dict(type='str', required=False),
         hyperthreading=dict(type='str', required=False, choices=['all', 'none']),
-        ignition_endpoint=dict(type='dict', options=dict(
-            url=dict(type='str', required=True),
-            ca_certificate=dict(type='str', required=False),
-        )),
-        ingress_vips=dict(type='list', elements='dict', options=dict(
-            ip=dict(type='str', required=True),
-            netmask=dict(type='str', required=True)
-        )),
-        machine_networks=dict(type='list', elements='dict', options=dict(
-            cidr=dict(type='str', required=True),
-            cluster_id=dict(type='str', required=True)
-        )),
         network_type=dict(type='str', required=False, choices=['OpenShiftSDN', 'OVNKubernetes']),
         no_proxy=dict(type='str', required=False),
         ocp_release_image=dict(type='str', required=False),
-        olm_operators=dict(type='list', elements='dict', options=dict(
-            name=dict(type='str', required=True),
-            namespace=dict(type='str', required=True)
-        )),
-        platform=dict(type='dict', options=dict(
-            type=dict(type='str', required=True, choices=["baremetal", "nutanix", "vsphere", "none", "oci"]),
-        )),
         schedulable_masters=dict(type='bool', required=False),
         service_network_cidr=dict(type='str', required=False),
-        service_networks=dict(type='list', elements='dict', options=dict(
-            cidr=dict(type='str', required=True),
-            cluster_id=dict(type='str', required=True)
-        )),
         ssh_public_key=dict(type='str', required=False),
         tags=dict(type='str', required=False),
         user_managed_networking=dict(type='bool', required=False),
@@ -144,10 +108,6 @@ def run_module():
 
     # create installer object that implements the RH assisted installer API
     installer = assisted_installer.assisted_installer()
-
-    os.environ["REDHAT_PULL_SECRET"] = module.params["pull_secret"] if module.params["pull_secret"] is not None else os.environ.get("REDHAT_PULL_SECRET")
-
-    os.environ["REDHAT_OFFLINE_TOKEN"] = module.params["offline_token"] if module.params["offline_token"] is not None else os.environ.get("REDHAT_OFFLINE_TOKEN")
 
     # If the state is present, we will need to consider create or update
     if module.params['state'] == 'present':
@@ -193,34 +153,33 @@ def run_module():
             # no cluster exists with that name in this org, we are doing a create operation
             if len(filtered_response) == 0:
                 try: 
-
                     cluster = installer.post_cluster(name=module.params['name'], 
-                                                    openshift_version=module.params['openshift_version'], 
-                                                    pull_secret= os.environ.get("REDHAT_PULL_SECRET"),
-                                                    additional_ntp_source=module.params['additional_ntp_source'],
-                                                    base_dns_domain=module.params['base_dns_domain'], 
-                                                    luster_network_cidr=module.params['cluster_network_cidr'], 
-                                                    cluster_network_host_prefix=module.params['cluster_network_host_prefix'], 
-                                                    cpu_architecture=module.params['cpu_architecture'], 
-                                                    high_availability_mode=module.params['high_availability_mode'], 
-                                                    http_proxy=module.params['http_proxy'], 
-                                                    https_proxy=module.params['https_proxy'], 
-                                                    hyperthreading=module.params['hyperthreading'], 
-                                                    network_type=module.params['network_type'], 
-                                                    no_proxy=module.params['no_proxy'], 
-                                                    ocp_release_image=module.params['ocp_release_image'],
-                                                    schedulable_masters=module.params['schedulable_masters'], 
-                                                    service_network_cidr=module.params['service_network_cidr'],
-                                                    service_networks=module.params['service_networks'], 
-                                                    ssh_public_key=module.params['ssh_public_key'], 
-                                                    tags=module.params['tags'], 
-                                                    user_managed_networking=module.params['user_managed_networking'], 
-                                                    vip_dhcp_allocation=module.params['vip_dhcp_allocation'],
+                                                     openshift_version=module.params['openshift_version'],
+                                                     pull_secret=os.environ.get("REDHAT_PULL_SECRET"),
+                                                     additional_ntp_source=module.params['additional_ntp_source'],
+                                                     base_dns_domain=module.params['base_dns_domain'], 
+                                                     cluster_network_cidr=module.params['cluster_network_cidr'], 
+                                                     cluster_network_host_prefix=module.params['cluster_network_host_prefix'], 
+                                                     cpu_architecture=module.params['cpu_architecture'], 
+                                                     high_availability_mode=module.params['high_availability_mode'], 
+                                                     http_proxy=module.params['http_proxy'], 
+                                                     https_proxy=module.params['https_proxy'], 
+                                                     hyperthreading=module.params['hyperthreading'], 
+                                                     network_type=module.params['network_type'], 
+                                                     no_proxy=module.params['no_proxy'], 
+                                                     ocp_release_image=module.params['ocp_release_image'],
+                                                     schedulable_masters=module.params['schedulable_masters'], 
+                                                     service_network_cidr=module.params['service_network_cidr'],
+                                                     ssh_public_key=module.params['ssh_public_key'], 
+                                                     tags=module.params['tags'], 
+                                                     user_managed_networking=module.params['user_managed_networking'], 
+                                                     vip_dhcp_allocation=module.params['vip_dhcp_allocation'],
                                                     )
 
                     result['changed'] = True
                     result['msg'] = cluster
                     result['state'] = cluster
+                    result['cluster'] = cluster
                     module.exit_json(**result)
 
                 except requests.exceptions.HTTPError as e:
