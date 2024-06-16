@@ -54,10 +54,10 @@ def run_module():
     module_args = dict(
         state=dict(type='str', required=True, choices=['present', 'absent']),
         name=dict(type='str', required=False),
-        cluster_id=dict(type='str', required=False),
+        cluster_id=dict(type='str', required=False, ),
         openshift_version=dict(type='str', required=False),
-        pull_secret=dict(type='str', required=False, no_log=True),
-        offline_token=dict(type='str', required=False, no_log=True),
+        pull_secret=dict(type='str', required=False, no_log=True, default=None),
+        offline_token=dict(type='str', required=False, no_log=True, default=None),
         additional_ntp_source=dict(type='str', required=False),
         # api_vips=dict(type='list', elements='dict', options=dict(
         #     ip=dict(type='str', required=True),
