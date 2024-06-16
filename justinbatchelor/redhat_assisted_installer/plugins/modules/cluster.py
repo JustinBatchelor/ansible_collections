@@ -120,6 +120,8 @@ def run_module():
     # for consumption, for example, in a subsequent task
     result = dict(
         changed=False,
+        msg = ''
+        cluster = ''
         state='',
 
     )
@@ -196,7 +198,7 @@ def run_module():
 
                     result['changed'] = True
                     result['msg'] = cluster
-                    result['cluster'] = cluster
+                    result['state'] = cluster
                     module.exit_json(**result)
 
                 except requests.exceptions.HTTPError as e:
