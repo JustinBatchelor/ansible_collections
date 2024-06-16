@@ -120,8 +120,8 @@ def run_module():
     # for consumption, for example, in a subsequent task
     result = dict(
         changed=False,
-        msg = ''
-        cluster = ''
+        msg = '',
+        cluster = '',
         state='',
 
     )
