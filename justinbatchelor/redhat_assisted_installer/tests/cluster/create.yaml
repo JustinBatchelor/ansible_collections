@@ -1,0 +1,22 @@
+- name: Manage OpenShift Cluster
+  hosts: localhost
+  tasks:
+    - name: Create a new OpenShift cluster
+      justinbatchelor.redhat_assisted_installer.cluster:
+        state: present
+        name: "ansible-collection-cluster"
+        openshift_version: "4.15"
+        base_dns_domain: "example.com"
+        cluster_network_cidr: "10.128.0.0/14"
+        cluster_network_host_prefix: 23
+        service_network_cidr: "172.30.0.0/16"
+        network_type: "OVNKubernetes"
+        platform:
+          type: "baremetal"
+        user_managed_networking: false
+        vip_dhcp_allocation: true
+      register: cluster
+
+    - name: Debug returned cluster
+      ansible.builtin.debug:
+        msg: "{{ cluster }}"

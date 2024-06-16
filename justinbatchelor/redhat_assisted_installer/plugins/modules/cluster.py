@@ -187,15 +187,12 @@ def run_module():
             # no cluster exists with that name in this org, we are doing a create operation
             if len(filtered_response) == 0:
                 try: 
-                    cluster = installer.post_cluster(name=module.params['name'], openshift_version=module.params['openshift_version'], pull_secret=module.params['pull_secret'], 
-                                        additional_ntp_source=module.params['additional_ntp_source'], api_vips=module.params['api_vips'], base_dns_domain=module.params['base_dns_domain'], 
-                                        cluster_network_cidr=module.params['cluster_network_cidr'], cluster_network_host_prefix=module.params['cluster_network_host_prefix'], 
-                                        cluster_networks=module.params['cluster_networks'], cpu_architecture=module.params['cpu_architecture'], disk_encryption=module.params['disk_encryption'], 
-                                        high_availability_mode=module.params['high_availability_mode'], http_proxy=module.params['http_proxy'], https_proxy=module.params['https_proxy'], 
-                                        hyperthreading=module.params['hyperthreading'], ignition_endpoint=module.params['ignition_endpoint'], ingress_vips=module.params['ingress_vips'], 
-                                        platform=['platform'], schedulable_masters=module.params['schedulable_masters'], service_network_cidr=module.params['service_network_cidr'],
-                                        service_networks=module.params['service_networks'], ssh_public_key=module.params['ssh_public_key'], tags=module.params['tags'], 
-                                        user_managed_networking=module.params['user_managed_networking'], vip_dhcp_allocation=module.params['vip_dhcp_allocation'])
+                    cluster = installer.post_cluster(name=module.params['name'], openshift_version=module.params['openshift_version'], pull_secret=module.params['pull_secret'], additional_ntp_source=module.params['additional_ntp_source'],
+                                                    base_dns_domain=module.params['base_dns_domain'], cluster_network_cidr=module.params['cluster_network_cidr'], cluster_network_host_prefix=module.params['cluster_network_host_prefix'], 
+                                                    cpu_architecture=module.params['cpu_architecture'], high_availability_mode=module.params['high_availability_mode'], 
+                                                    http_proxy=module.params['http_proxy'], https_proxy=module.params['https_proxy'], hyperthreading=module.params['hyperthreading'], network_type=module.params['network_type'], no_proxy=module.params['no_proxy'], ocp_release_image=module.params['ocp_release_image'],
+                                                    schedulable_masters=module.params['schedulable_masters'], service_network_cidr=module.params['service_network_cidr'],service_networks=module.params['service_networks'], 
+                                                    ssh_public_key=module.params['ssh_public_key'], tags=module.params['tags'], user_managed_networking=module.params['user_managed_networking'], vip_dhcp_allocation=module.params['vip_dhcp_allocation'])
 
                     result['changed'] = True
                     result['msg'] = cluster
