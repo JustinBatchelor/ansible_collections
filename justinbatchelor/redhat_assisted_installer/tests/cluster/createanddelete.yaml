@@ -7,20 +7,14 @@
         name: "example-cluster"
         openshift_version: "4.15"
         base_dns_domain: "example.com"
-        api_vips:
-          - ip: "192.168.122.10"
-            netmask: "255.255.255.0"
-        ingress_vips:
-          - ip: "192.168.122.11"
-            netmask: "255.255.255.0"
         cluster_network_cidr: "10.128.0.0/14"
         cluster_network_host_prefix: 23
         service_network_cidr: "172.30.0.0/16"
         network_type: "OVNKubernetes"
-        additional_ntp_source: "ntp1.example.com,ntp2.example.com"
-        platform:
-          type: "baremetal"
         tags: "production,example"
         user_managed_networking: false
         vip_dhcp_allocation: true
       register: cluster
+
+    - debug:
+        msg: "{{ cluster }}"

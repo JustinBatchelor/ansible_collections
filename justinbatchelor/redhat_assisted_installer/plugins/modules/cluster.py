@@ -196,7 +196,7 @@ def run_module():
 
                     result['changed'] = True
                     result['msg'] = cluster
-                    result['cluster'] = cluster[0]
+                    result['cluster'] = cluster
                     module.exit_json(**result)
 
                 except requests.exceptions.HTTPError as e:
