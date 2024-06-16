@@ -6,7 +6,7 @@ from __future__ import (absolute_import, division, print_function)
 from ansible.module_utils.basic import AnsibleModule
 from redhat_assisted_installer import assisted_installer
 from ..module_utils import tools
-import jmespath, requests
+import jmespath, requests, os
 
 from requests.exceptions import HTTPError
 
@@ -189,7 +189,7 @@ def run_module():
             # no cluster exists with that name in this org, we are doing a create operation
             if len(filtered_response) == 0:
                 try: 
-                    cluster = installer.post_cluster(name=module.params['name'], openshift_version=module.params['openshift_version'], pull_secret=module.params['pull_secret'], additional_ntp_source=module.params['additional_ntp_source'],
+                    cluster = installer.post_cluster(name=module.params['name'], openshift_version=module.params['openshift_version'], pull_secret=module.params['pull_secret'] if module.params["pull_secret"] is not None else os.environ.get("REDHAT_PULL_SECRET"), additional_ntp_source=module.params['additional_ntp_source'],
                                                     base_dns_domain=module.params['base_dns_domain'], cluster_network_cidr=module.params['cluster_network_cidr'], cluster_network_host_prefix=module.params['cluster_network_host_prefix'], 
                                                     cpu_architecture=module.params['cpu_architecture'], high_availability_mode=module.params['high_availability_mode'], 
                                                     http_proxy=module.params['http_proxy'], https_proxy=module.params['https_proxy'], hyperthreading=module.params['hyperthreading'], network_type=module.params['network_type'], no_proxy=module.params['no_proxy'], ocp_release_image=module.params['ocp_release_image'],
