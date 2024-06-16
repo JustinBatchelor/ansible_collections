@@ -58,55 +58,55 @@ def run_module():
         openshift_version=dict(type='str', required=False),
         pull_secret=dict(type='str', required=False, no_log=True),
         additional_ntp_source=dict(type='str', required=False),
-        api_vips=dict(type='list', elements='dict', options=dict(
-            ip=dict(type='str', required=True),
-            netmask=dict(type='str', required=True)
-        )),
+        # api_vips=dict(type='list', elements='dict', options=dict(
+        #     ip=dict(type='str', required=True),
+        #     netmask=dict(type='str', required=True)
+        # )),
         base_dns_domain=dict(type='str', required=False),
         cluster_network_cidr=dict(type='str', required=False),
         cluster_network_host_prefix=dict(type='int', required=False),
-        cluster_networks=dict(type='list', elements='dict', options=dict(
-            cidr=dict(type='str', required=True),
-            cluster_id=dict(type='str', required=True)
-        )),
+        # cluster_networks=dict(type='list', elements='dict', options=dict(
+        #     cidr=dict(type='str', required=True),
+        #     cluster_id=dict(type='str', required=True)
+        # )),
         cpu_architecture=dict(type='str', required=False, choices=['x86_64', 'aarch64', 'arm64', 'ppc64le', 's390x']),
-        disk_encryption=dict(type='dict', options=dict(
-            enable_on=dict(type='str', required=True),
-            mode=dict(type='str', required=True),
-            tang_servers=dict(type='str', required=False),
-        )),
+        # disk_encryption=dict(type='dict', options=dict(
+        #     enable_on=dict(type='str', required=True),
+        #     mode=dict(type='str', required=True),
+        #     tang_servers=dict(type='str', required=False),
+        # )),
         high_availability_mode=dict(type='str', required=False),
         http_proxy=dict(type='str', required=False),
         https_proxy=dict(type='str', required=False),
         hyperthreading=dict(type='str', required=False, choices=['all', 'none']),
-        ignition_endpoint=dict(type='dict', options=dict(
-            url=dict(type='str', required=True),
-            ca_certificate=dict(type='str', required=False),
-        )),
-        ingress_vips=dict(type='list', elements='dict', options=dict(
-            ip=dict(type='str', required=True),
-            netmask=dict(type='str', required=True)
-        )),
-        machine_networks=dict(type='list', elements='dict', options=dict(
-            cidr=dict(type='str', required=True),
-            cluster_id=dict(type='str', required=True)
-        )),
+        # ignition_endpoint=dict(type='dict', options=dict(
+        #     url=dict(type='str', required=True),
+        #     ca_certificate=dict(type='str', required=False),
+        # )),
+        # ingress_vips=dict(type='list', elements='dict', options=dict(
+        #     ip=dict(type='str', required=True),
+        #     netmask=dict(type='str', required=True)
+        # )),
+        # machine_networks=dict(type='list', elements='dict', options=dict(
+        #     cidr=dict(type='str', required=True),
+        #     cluster_id=dict(type='str', required=True)
+        # )),
         network_type=dict(type='str', required=False, choices=['OpenShiftSDN', 'OVNKubernetes']),
         no_proxy=dict(type='str', required=False),
         ocp_release_image=dict(type='str', required=False),
-        olm_operators=dict(type='list', elements='dict', options=dict(
-            name=dict(type='str', required=True),
-            namespace=dict(type='str', required=True)
-        )),
-        platform=dict(type='dict', options=dict(
-            type=dict(type='str', required=True, choices=["baremetal", "nutanix", "vsphere", "none", "oci"]),
-        )),
+        # olm_operators=dict(type='list', elements='dict', options=dict(
+        #     name=dict(type='str', required=True),
+        #     namespace=dict(type='str', required=True)
+        # )),
+        # platform=dict(type='dict', options=dict(
+        #     type=dict(type='str', required=True, choices=["baremetal", "nutanix", "vsphere", "none", "oci"]),
+        # )),
         schedulable_masters=dict(type='bool', required=False),
         service_network_cidr=dict(type='str', required=False),
-        service_networks=dict(type='list', elements='dict', options=dict(
-            cidr=dict(type='str', required=True),
-            cluster_id=dict(type='str', required=True)
-        )),
+        # service_networks=dict(type='list', elements='dict', options=dict(
+        #     cidr=dict(type='str', required=True),
+        #     cluster_id=dict(type='str', required=True)
+        # )),
         ssh_public_key=dict(type='str', required=False),
         tags=dict(type='str', required=False),
         user_managed_networking=dict(type='bool', required=False),
