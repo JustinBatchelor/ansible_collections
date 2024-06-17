@@ -18,7 +18,7 @@
         ingress_vip: ""
         # network_type: ""
         service_network_cidr: "172.30.0.0/16"
-        user_managed_networking: false
+        user_managed_networking: true
         ssh_authorized_key: ""
         vip_dhcp_allocation: false
         state: present

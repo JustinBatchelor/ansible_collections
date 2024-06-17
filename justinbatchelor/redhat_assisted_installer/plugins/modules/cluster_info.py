@@ -104,9 +104,23 @@ def run_module():
     installer = assisted_installer.assisted_installer()
 
     if module.params['cluster_id'] is None:
-        result['cluster_info'] = installer.get_clusters()
+        try:
+            api_response = installer.get_clusters()
+            api_response.raise_for_status()
+            result['cluster_info'] = api_response.json()
+        except Exception as e:
+            result['changed'] = False
+            result['msg'] = f'Failed to get the cluster with the following exception from api: {e}'
+            module.fail_json(**result)    
     else:
-        result['cluster_info'] = installer.get_cluster(cluster_id=module.params['cluster_id'])
+        try:
+            api_response = installer.get_cluster(cluster_id=module.params['cluster_id'])
+            api_response.raise_for_status()
+            result['cluster_info'] = [api_response.json()]
+        except Exception as e:
+            result['changed'] = False
+            result['msg'] = f'Failed to get the cluster with the following exception from api: {e}'
+            module.fail_json(**result)    
 
 
     # during the execution of the module, if there is an exception or a

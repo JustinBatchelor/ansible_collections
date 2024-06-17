@@ -110,11 +110,6 @@ def run_module():
     if module.params['pull_secret'] is not None:
         os.environ["REDHAT_PULL_SECRET"] = module.params["pull_secret"]
 
-    # set result.auth fields to match env vars
-    result['auth']['offline_token'] = os.environ.get("REDHAT_OFFLINE_TOKEN")
-    result['auth']['pull_secret'] = os.environ.get("REDHAT_PULL_SECRET")
-
-
     ## First we want to create the cluster object provided the arguments from the user
     cluster_params = ClusterParams(name=module.params["name"],
                             openshift_version=module.params["openshift_version"],
@@ -137,7 +132,6 @@ def run_module():
                             vip_dhcp_allocation=module.params['vip_dhcp_allocation'],
                             )
 
-
     # create installer object that implements the RH assisted installer API
     installer = assisted_installer.assisted_installer()
 
@@ -157,14 +151,12 @@ def run_module():
         """
         if (module.params['cluster_id'] is not None and module.params['name'] is not None) or (module.params["cluster_id"] is not None):
             try:
-                cluster = installer.patch_cluster(cluster_params)
-                if "code" in cluster[0]:
-                    result['msg'] = f'Patching the cluster returned the following error: {cluster[0]['reason']}',
-                    module.fail_json(**result)
-
+                api_response = installer.patch_cluster(cluster_params)
+                ## eval status code from api 
+                api_response.raise_for_status()
                 result['changed'] = True
-                result['msg'] = cluster
-                result['cluster'] = cluster               
+                result['msg'] = f"Successfully patched the cluster: {api_response.json()['id']}"
+                result['cluster'] = [api_response.json()]               
                 module.exit_json(**result)
 
             except Exception as e:
@@ -179,52 +171,54 @@ def run_module():
         We will need to check that a cluster does not already exist with that name before we can determine if we are creating or updating a cluster
         """
         if module.params['cluster_id'] is None and module.params['name'] is not None:
-            # need to query for existing clusters and ensure that one does not already exist with that name
-            clusters = installer.get_clusters()
-
-            # JMESPath expression to filter objects by name
-            expression = f"[?name=='{module.params["name"]}']"
-
-            # Search the API response using the JMESPath expression
-            filtered_response = jmespath.search(expression, clusters)
-            
-            # all cluster names should be unique, fail if filtered response is greater than 1
-            if len(filtered_response) > 1:
-                # fail for one of two reasons listed in message
-                result['msg'] = 'We ran into a stange error. It seems you have multiple clusters with the same name, or our JMESpath expression is not working as expected.'
+            try: 
+                # need to query for existing clusters and ensure that one does not already exist with that name
+                api_response = installer.get_clusters()
+                api_response.raise_for_status()
+            except Exception as e:
+                result['changed'] = False
+                result['msg'] = f"Failed to get clusters with the following exception from api: {e}"
                 module.fail_json(**result)
-            # now we know we are patching an existing cluster
-            if len(filtered_response) == 1:
-                try:
-                    cluster = installer.patch_cluster(cluster_params)
-                    if "code" in cluster[0]:
-                        result['msg'] = f'Patching the cluster returned the following error: {cluster[0]['reason']}'
-                        module.fail_json(**result)
-                    result['changed'] = True
-                    result['msg'] = cluster
-                    result['cluster'] = cluster               
-                    module.exit_json(**result)
+            else:
+                # JMESPath expression to filter objects by name
+                expression = f"[?name=='{module.params["name"]}']"
 
-                except Exception as e:
-                    result['changed'] = False
-                    result['msg'] = f'Failed to patch the cluster with the following exception from api: {e}'
+                # Search the API response using the JMESPath expression
+                filtered_response = jmespath.search(expression, api_response.json())
+                
+                # all cluster names should be unique, fail if filtered response is greater than 1
+                if len(filtered_response) > 1:
+                    # fail for one of two reasons listed in message
+                    result['msg'] = 'We ran into a stange error. It seems you have multiple clusters with the same name, or our JMESpath expression is not working as expected.'
                     module.fail_json(**result)
+                # now we know we are patching an existing cluster
+                if len(filtered_response) == 1:
+                    try:
+                        api_response = installer.patch_cluster(cluster_params)
+                        api_response.raise_for_status()
+                        result['changed'] = True
+                        result['msg'] = f"Successfully patched the cluster: {api_response.json()['id']}"
+                        result['cluster'] = [api_response.json()]               
+                        module.exit_json(**result)
 
-            if len(filtered_response) == 0:
-                try: 
-                    cluster = installer.post_cluster(cluster_params)
-                    if "code" in cluster[0]:
-                        result['msg'] = f'Creating the cluster returned the following error: {cluster[0]['reason']}'
+                    except Exception as e:
+                        result['changed'] = False
+                        result['msg'] = f'Failed to patch the cluster with the following exception from api: {e}'
                         module.fail_json(**result)
-                    result['changed'] = True
-                    result['msg'] = cluster
-                    result['cluster'] = cluster 
-                    module.exit_json(**result)
 
-                except Exception as e:
-                    result['changed'] = False
-                    result['msg'] = f'Failed to create the cluster with the following exception from api: {e}'
-                    module.fail_json(**result)
+                if len(filtered_response) == 0:
+                    try: 
+                        api_response = installer.post_cluster(cluster_params)
+                        api_response.raise_for_status()
+                        result['changed'] = True
+                        result['msg'] = f"Successfully created the cluster: {api_response.json()['id']}"
+                        result['cluster'] = [api_response.json()] 
+                        module.exit_json(**result)
+
+                    except Exception as e:
+                        result['changed'] = False
+                        result['msg'] = f'Failed to create the cluster with the following exception from api: {e}'
+                        module.fail_json(**result)
                 
     # Otherwise the state is absent and we will delete the cluster
     else:
@@ -237,45 +231,48 @@ def run_module():
         # 1. User specified both cluster_id and name
         # 2. User only specified cluster_id
         if (module.params['cluster_id'] is not None and module.params['name'] is not None) or (module.params["cluster_id"] is not None):
-
-            try:
-                installer.delete_cluster(cluster_id=module.params['cluster_id'])
+            if installer.delete_cluster(cluster_id=module.params['cluster_id']):
                 result['changed'] = True
                 result['msg'] = f"Successfully deleted cluster: {module.params['cluster_id']}"
                 module.exit_json(**result)
-
-            except Exception as e:
+            else:
                 result['changed'] = False
                 result['msg'] = f"Failed to delete cluster: {module.params['cluster_id']}\nAPI call returned a bad status code"
                 module.fail_json(**result)
         # handle the case where user specified name only
         else:
-            # need to query for existing clusters and ensure that one does not already exist with that name
-            clusters = installer.get_clusters()
-
-            # JMESPath expression to filter objects by name
-            expression = f"[?name=='{module.params["name"]}']"
-
-            # Search the API response using the JMESPath expression
-            filtered_response = jmespath.search(expression, clusters)
-
-            # all cluster names should be unique, fail if filtered response is greater than 1
-            if len(filtered_response) > 1:
-                # fail for one of two reasons listed in message
-                result['msg'] = 'We ran into a stange error. It seems you have multiple clusters with the same name, or our JMESpath expression is not working as expected.'
+            try: 
+                # need to query for existing clusters and ensure that one does not already exist with that name
+                api_response = installer.get_clusters()
+                api_response.raise_for_status()
+            except Exception as e:
+                result['changed'] = False
+                result['msg'] = f"Failed to get clusters with the following exception from api: {e}"
                 module.fail_json(**result)
-            # now we know we are patching an existing cluster
-            if len(filtered_response) == 1:
-                try:
-                    installer.delete_cluster(cluster_id=filtered_response[0]['id'])
-                    result['changed'] = True
-                    result['msg'] = f"Successfully deleted cluster: {filtered_response[0]['id']}"
-                    module.exit_json(**result)
-                except Exception as e:
-                    result['changed'] = False
-                    result['msg'] = f"Failed to delete cluster: {module.params['cluster_id']}\nAPI call returned a bad status code"
-                    module.fail_json(msg='Functionality is under development right now... please specify the cluster_id.', **result)
-        
+            else:
+                # JMESPath expression to filter objects by name
+                expression = f"[?name=='{module.params["name"]}']"
+
+                # Search the API response using the JMESPath expression
+                filtered_response = jmespath.search(expression, api_response.json())
+
+                # all cluster names should be unique, fail if filtered response is greater than 1
+                if len(filtered_response) > 1:
+                    # fail for one of two reasons listed in message
+                    result['msg'] = 'We ran into a stange error. It seems you have multiple clusters with the same name, or our JMESpath expression is not working as expected.'
+                    module.fail_json(**result)
+                # now we know we are patching an existing cluster
+                if len(filtered_response) == 1:
+                    try:
+                        installer.delete_cluster(cluster_id=filtered_response[0]['id'])
+                        result['changed'] = True
+                        result['msg'] = f"Successfully deleted cluster: {filtered_response[0]['id']}"
+                        module.exit_json(**result)
+                    except Exception as e:
+                        result['changed'] = False
+                        result['msg'] = f"Failed to delete cluster: {module.params['cluster_id']}\nAPI call returned a bad status code"
+                        module.fail_json(msg='Functionality is under development right now... please specify the cluster_id.', **result)
+            
 
     # during the execution of the module, if there is an exception or a
     # conditional state that effectively causes a failure, run
