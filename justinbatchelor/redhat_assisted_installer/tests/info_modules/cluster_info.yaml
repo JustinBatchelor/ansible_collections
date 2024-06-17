@@ -1,22 +1,16 @@
 - name: Playbook to test the cluster_info plugin module
   hosts: localhost
+  vars_prompt:
+    - name: cluster_id
+      prompt: "Please enter the cluster ID (UUID) (leave empty if not applicable)"
   tasks:
     - name: Task to use custom module with no arguments
       justinbatchelor.redhat_assisted_installer.cluster_info:
+        cluster_id: "{{ cluster_id | default(None) }}"
       register: all_cluster_info
 
-    - debug:
+    - name: Task to debug returned value from module
+      ansible.builtin.debug:
         msg: "{{ all_cluster_info }}"
 
-    - debug:
-        msg: "{{ all_cluster_info['cluster_info'] }}"
-
-    - name: Task to use custom module with argument
-      justinbatchelor.redhat_assisted_installer.cluster_info:
-        cluster_id: '{{ all_cluster_info["cluster_info"][0]["id"] }}'
-      register: cluster_info
-
-
-    - debug:
-        msg: "{{ cluster_info['cluster_info'][0] }}"
 

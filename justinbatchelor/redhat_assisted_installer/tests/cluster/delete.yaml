@@ -1,0 +1,12 @@
+- name: Manage OpenShift Cluster
+  hosts: localhost
+  vars_prompt:
+    - name: cluster_id
+      prompt: Please enter the cluster id you want to delete
+      private: false
+
+  tasks:
+    - name: Task to delete OpenShift cluster with cluster_id {{ cluster_id }}
+      justinbatchelor.redhat_assisted_installer.cluster:
+        state: absent
+        cluster_id: "{{ cluster_id }}"

@@ -8,6 +8,8 @@ from redhat_assisted_installer import assisted_installer
 from ..module_utils import tools
 import jmespath, requests, os, json
 
+from redhat_assisted_installer.lib.schema.cluster import *
+
 from requests.exceptions import HTTPError
 
 __metaclass__ = type
@@ -53,29 +55,27 @@ RETURN = r'''
 def run_module():
     module_args = dict(
         state=dict(type='str', required=True, choices=['present', 'absent']),
-        name=dict(type='str', required=False),
+        pull_secret=dict(type='str', required=False, no_log=True),
+        offline_token=dict(type='str', required=False, no_log=True),
         cluster_id=dict(type='str', required=False),
+        name=dict(type='str', required=False),
+        api_vip=dict(type='str', required=False),
         openshift_version=dict(type='str', required=False),
-        pull_secret=dict(type='str', required=False, no_log=True, default=None),
-        offline_token=dict(type='str', required=False, no_log=True, default=None),
         additional_ntp_source=dict(type='str', required=False),
         base_dns_domain=dict(type='str', required=False),
         cluster_network_cidr=dict(type='str', required=False),
         cluster_network_host_prefix=dict(type='int', required=False),
         cpu_architecture=dict(type='str', required=False, choices=['x86_64', 'aarch64', 'arm64', 'ppc64le', 's390x']),
-        high_availability_mode=dict(type='str', required=False),
+        high_availability_mode=dict(type='str', required=False, choices=["None", "Full"]),
         http_proxy=dict(type='str', required=False),
         https_proxy=dict(type='str', required=False),
-        hyperthreading=dict(type='str', required=False, choices=['all', 'none']),
+        hyperthreading=dict(type='str', required=False, choices=['all', 'none', "masters", "workers"]),
+        ingress_vip=dict(type='str', required=False),
         network_type=dict(type='str', required=False, choices=['OpenShiftSDN', 'OVNKubernetes']),
-        no_proxy=dict(type='str', required=False),
-        ocp_release_image=dict(type='str', required=False),
-        schedulable_masters=dict(type='bool', required=False),
         service_network_cidr=dict(type='str', required=False),
-        ssh_public_key=dict(type='str', required=False),
-        tags=dict(type='str', required=False),
         user_managed_networking=dict(type='bool', required=False),
-        vip_dhcp_allocation=dict(type='bool', required=False)
+        ssh_authorized_key=dict(type='str', required=False),
+        vip_dhcp_allocation=dict(type='bool', required=False),
     )
 
     # seed the result dict in the object
@@ -85,10 +85,12 @@ def run_module():
     # for consumption, for example, in a subsequent task
     result = dict(
         changed=False,
-        msg = '',
-        cluster = '',
-        state='',
-
+        msg='',
+        auth={
+            "offline_token": "",
+            "pull_secret": "",
+        },
+        cluster=''
     )
 
     # the AnsibleModule object will be our abstraction working with Ansible
@@ -100,11 +102,41 @@ def run_module():
         supports_check_mode=True
     )
 
-    # if the user is working with this module in only check mode we do not
-    # want to make any changes to the environment, just return the current
-    # state with no modifications
-    if module.check_mode:
-        module.exit_json(**result)
+    ## First we need to check if the user provided an offline token 
+    if module.params['offline_token'] is not None:
+        os.environ["REDHAT_OFFLINE_TOKEN"] = module.params["offline_token"]
+
+    ## Now we need to check if the user provided a pull secret
+    if module.params['pull_secret'] is not None:
+        os.environ["REDHAT_PULL_SECRET"] = module.params["pull_secret"]
+
+    # set result.auth fields to match env vars
+    result['auth']['offline_token'] = os.environ.get("REDHAT_OFFLINE_TOKEN")
+    result['auth']['pull_secret'] = os.environ.get("REDHAT_PULL_SECRET")
+
+
+    ## First we want to create the cluster object provided the arguments from the user
+    cluster_params = ClusterParams(name=module.params["name"],
+                            openshift_version=module.params["openshift_version"],
+                            cluster_id=module.params['cluster_id'],
+                            additional_ntp_source=module.params['cluster_id'],
+                            api_vip=module.params['api_vip'],
+                            base_dns_domain=module.params['base_dns_domain'],
+                            cluster_network_cidr=module.params['cluster_network_cidr'],
+                            cluster_network_host_prefix=module.params['cluster_network_host_prefix'],
+                            cpu_architecture=module.params['cpu_architecture'],
+                            high_availability_mode=module.params['high_availability_mode'],
+                            http_proxy=module.params['http_proxy'],
+                            https_proxy=module.params['https_proxy'],
+                            hyperthreading=module.params['hyperthreading'],
+                            ingress_vip=module.params['ingress_vip'],
+                            network_type=module.params['network_type'],
+                            service_network_cidr=module.params['service_network_cidr'],
+                            user_managed_networking=module.params['user_managed_networking'],
+                            ssh_authorized_key=module.params['ssh_authorized_key'],
+                            vip_dhcp_allocation=module.params['vip_dhcp_allocation'],
+                            )
+
 
     # create installer object that implements the RH assisted installer API
     installer = assisted_installer.assisted_installer()
@@ -123,9 +155,17 @@ def run_module():
         We can infer that at this point that we are updating an existing cluster
         """
         if (module.params['cluster_id'] is not None and module.params['name'] is not None) or (module.params["cluster_id"] is not None):
-            ## TODO ## 
-            # need to query for existing clusters and patch based on user specified args
-            print("under construction... beep boop bop")
+            try:
+                cluster = installer.patch_cluster(cluster_params)
+                result['changed'] = True
+                result['msg'] = cluster
+                result['cluster'] = cluster               
+                module.exit_json(**result)
+
+            except Exception as e:
+                result['changed'] = False
+                module.fail_json(msg=f'Failed to patch the cluster with the following exception from api\nERR: {e}', **result)
+
         """
         handle case 
         1. only case that remains is the user specifed a name without a cluster id
@@ -133,7 +173,6 @@ def run_module():
         We will need to check that a cluster does not already exist with that name before we can determine if we are creating or updating a cluster
         """
         if module.params['cluster_id'] is None and module.params['name'] is not None:
-            ## TODO ##
             # need to query for existing clusters and ensure that one does not already exist with that name
             clusters = installer.get_clusters()
 
@@ -149,50 +188,29 @@ def run_module():
                 module.fail_json(msg='We ran into a stange error. It seems you have multiple clusters with the same name, or our JMESpath expression is not working as expected.', **result)
             # now we know we are patching an existing cluster
             if len(filtered_response) == 1:
-                print("under construction")
-            # no cluster exists with that name in this org, we are doing a create operation
-            if len(filtered_response) == 0:
-                try: 
-                    cluster = installer.post_cluster(name=module.params['name'], 
-                                                     openshift_version=module.params['openshift_version'],
-                                                     pull_secret=os.environ.get("REDHAT_PULL_SECRET"),
-                                                     additional_ntp_source=module.params['additional_ntp_source'],
-                                                     base_dns_domain=module.params['base_dns_domain'], 
-                                                     cluster_network_cidr=module.params['cluster_network_cidr'], 
-                                                     cluster_network_host_prefix=module.params['cluster_network_host_prefix'], 
-                                                     cpu_architecture=module.params['cpu_architecture'], 
-                                                     high_availability_mode=module.params['high_availability_mode'], 
-                                                     http_proxy=module.params['http_proxy'], 
-                                                     https_proxy=module.params['https_proxy'], 
-                                                     hyperthreading=module.params['hyperthreading'], 
-                                                     network_type=module.params['network_type'], 
-                                                     no_proxy=module.params['no_proxy'], 
-                                                     ocp_release_image=module.params['ocp_release_image'],
-                                                     schedulable_masters=module.params['schedulable_masters'], 
-                                                     service_network_cidr=module.params['service_network_cidr'],
-                                                     ssh_public_key=module.params['ssh_public_key'], 
-                                                     tags=module.params['tags'], 
-                                                     user_managed_networking=module.params['user_managed_networking'], 
-                                                     vip_dhcp_allocation=module.params['vip_dhcp_allocation'],
-                                                    )
-
+                try:
+                    cluster = installer.patch_cluster(cluster_params)
                     result['changed'] = True
                     result['msg'] = cluster
-                    result['state'] = cluster
-                    result['cluster'] = cluster
+                    result['cluster'] = cluster               
                     module.exit_json(**result)
-
-                except requests.exceptions.HTTPError as e:
-                    result['changed'] = False
-                    result['msg'] = f'{e}'
-                    module.fail_json(msg=f'Failed to create the cluster api call return bad status code\nERR: {e}', **result)
 
                 except Exception as e:
                     result['changed'] = False
-                    result['msg'] = f'{e}'
+                    module.fail_json(msg=f'Failed to patch the cluster with the following exception from api\nERR: {e}', **result)
+
+            if len(filtered_response) == 0:
+                try: 
+                    cluster = installer.post_cluster(cluster_params)
+                    result['changed'] = True
+                    result['msg'] = cluster
+                    result['cluster'] = cluster 
+                    module.exit_json(**result)
+
+                except Exception as e:
+                    result['changed'] = False
                     module.fail_json(msg=f'Failed to create the cluster with the following exception from api\nERR: {e}', **result)
-
-
+                
     # Otherwise the state is absent and we will delete the cluster
     else:
         # In order to delete the cluster we will need the cluster_id or name at bare minimum 
@@ -205,7 +223,7 @@ def run_module():
         if (module.params['cluster_id'] is not None and module.params['name'] is not None) or (module.params["cluster_id"] is not None):
             # if delete_cluster() succeeds
             try:
-                installer.delete_cluster(id=module.params['cluster_id'])
+                installer.delete_cluster(cluster_id=module.params['cluster_id'])
                 result['changed'] = True
                 result['msg'] = f"Successfully deleted cluster: {module.params['cluster_id']}"
                 module.exit_json(**result)
@@ -216,10 +234,31 @@ def run_module():
                 module.fail_json(msg='Functionality is under development right now... please specify the cluster_id.', **result)
         # handle the case where user specified name only
         else:
-            # fail because not implemented yet
-            module.fail_json(msg='Functionality is under development right now... please specify the cluster_id.', **result)
+            # need to query for existing clusters and ensure that one does not already exist with that name
+            clusters = installer.get_clusters()
 
+            # JMESPath expression to filter objects by name
+            expression = f"[?name=='{module.params["name"]}']"
 
+            # Search the API response using the JMESPath expression
+            filtered_response = jmespath.search(expression, clusters)
+
+            # all cluster names should be unique, fail if filtered response is greater than 1
+            if len(filtered_response) > 1:
+                # fail for one of two reasons listed in message
+                module.fail_json(msg='We ran into a stange error. It seems you have multiple clusters with the same name, or our JMESpath expression is not working as expected.', **result)
+            # now we know we are patching an existing cluster
+            if len(filtered_response) == 1:
+                try:
+                    installer.delete_cluster(cluster_id=filtered_response[0]['id'])
+                    result['changed'] = True
+                    result['msg'] = f"Successfully deleted cluster: {filtered_response[0]['id']}"
+                    module.exit_json(**result)
+                except Exception as e:
+                    result['changed'] = False
+                    result['msg'] = f"Failed to delete cluster: {module.params['cluster_id']}\nAPI call returned a bad status code"
+                    module.fail_json(msg='Functionality is under development right now... please specify the cluster_id.', **result)
+        
 
     # during the execution of the module, if there is an exception or a
     # conditional state that effectively causes a failure, run

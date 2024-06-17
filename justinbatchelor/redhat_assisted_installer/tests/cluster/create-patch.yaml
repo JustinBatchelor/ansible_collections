@@ -1,0 +1,58 @@
+- name: Manage OpenShift Cluster
+  hosts: localhost
+  tasks:
+    - name: Create a new OpenShift cluster
+      justinbatchelor.redhat_assisted_installer.cluster:
+        name: "pypi-testing"
+        openshift_version: "4.15"
+        additional_ntp_source: "time.google.com"
+        api_vip: ""
+        base_dns_domain: "example.com"
+        cluster_network_cidr: ""
+        cluster_network_host_prefix: 23
+        cpu_architecture: x86_64
+        high_availability_mode: "None"
+        http_proxy: ""
+        https_proxy: ""
+        # hyperthreading: ""
+        ingress_vip: ""
+        # network_type: ""
+        service_network_cidr: "172.30.0.0/16"
+        # user_managed_networking: false
+        ssh_authorized_key: ""
+        vip_dhcp_allocation: false
+        state: present
+      register: cluster
+
+    - name: Debug returned cluster
+      ansible.builtin.debug:
+        msg: "{{ cluster['cluster'] }}"
+
+    - name: Task to use info module on returned cluster
+      justinbatchelor.redhat_assisted_installer.cluster_info:
+        cluster_id: "{{ cluster['cluster'][0]['id'] }}"
+      register: cluster_info
+
+    - name: Debug returned cluster
+      ansible.builtin.debug:
+        msg: "{{ cluster_info['cluster_info'] }}"
+
+    - name: Patch existing cluster's base dns
+      justinbatchelor.redhat_assisted_installer.cluster:
+        state: present
+        cluster_id: "{{ cluster['cluster'][0]['id'] }}"
+        base_dns_domain: "batchelor.live"
+      register: cluster
+
+    - name: Debug returned patched cluster
+      ansible.builtin.debug:
+        msg: "{{ cluster['cluster'] }}"
+
+    - name: Task to use info module on patched cluster
+      justinbatchelor.redhat_assisted_installer.cluster_info:
+        cluster_id: "{{ cluster['cluster'][0]['id'] }}"
+      register: cluster_info
+
+    - name: Debug info module patched cluster
+      ansible.builtin.debug:
+        msg: "{{ cluster_info['cluster_info'] }}"
