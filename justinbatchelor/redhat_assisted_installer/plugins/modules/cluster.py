@@ -146,7 +146,8 @@ def run_module():
         # If user did not specifiy either cluster_id or name we need to fail, as a name is required to create a cluster
         if module.params["cluster_id"] is None and module.params["name"] is None:
             # fail message
-            module.fail_json(msg='When state is present you must specifiy at least a name. If a cluster does not already exist with that name, this module will create one. Please update the corresponding args and try to rerun.', **result)
+            result['msg'] = 'When state is present you must specifiy at least a name. If a cluster does not already exist with that name, this module will create one. Please update the corresponding args and try to rerun.'
+            module.fail_json(**result)
         """
         handle cases
         1. User specified both cluster_id and name
@@ -157,6 +158,10 @@ def run_module():
         if (module.params['cluster_id'] is not None and module.params['name'] is not None) or (module.params["cluster_id"] is not None):
             try:
                 cluster = installer.patch_cluster(cluster_params)
+                if "code" in cluster[0]:
+                    result['msg'] = f'Patching the cluster returned the following error: {cluster[0]['reason']}',
+                    module.fail_json(**result)
+
                 result['changed'] = True
                 result['msg'] = cluster
                 result['cluster'] = cluster               
@@ -164,7 +169,8 @@ def run_module():
 
             except Exception as e:
                 result['changed'] = False
-                module.fail_json(msg=f'Failed to patch the cluster with the following exception from api\nERR: {e}', **result)
+                result['msg'] = f'Failed to patch the cluster with the following exception from api: {e}'
+                module.fail_json(**result)
 
         """
         handle case 
@@ -185,11 +191,15 @@ def run_module():
             # all cluster names should be unique, fail if filtered response is greater than 1
             if len(filtered_response) > 1:
                 # fail for one of two reasons listed in message
-                module.fail_json(msg='We ran into a stange error. It seems you have multiple clusters with the same name, or our JMESpath expression is not working as expected.', **result)
+                result['msg'] = 'We ran into a stange error. It seems you have multiple clusters with the same name, or our JMESpath expression is not working as expected.'
+                module.fail_json(**result)
             # now we know we are patching an existing cluster
             if len(filtered_response) == 1:
                 try:
                     cluster = installer.patch_cluster(cluster_params)
+                    if "code" in cluster[0]:
+                        result['msg'] = f'Patching the cluster returned the following error: {cluster[0]['reason']}'
+                        module.fail_json(**result)
                     result['changed'] = True
                     result['msg'] = cluster
                     result['cluster'] = cluster               
@@ -197,11 +207,15 @@ def run_module():
 
                 except Exception as e:
                     result['changed'] = False
-                    module.fail_json(msg=f'Failed to patch the cluster with the following exception from api\nERR: {e}', **result)
+                    result['msg'] = f'Failed to patch the cluster with the following exception from api: {e}'
+                    module.fail_json(**result)
 
             if len(filtered_response) == 0:
                 try: 
                     cluster = installer.post_cluster(cluster_params)
+                    if "code" in cluster[0]:
+                        result['msg'] = f'Creating the cluster returned the following error: {cluster[0]['reason']}'
+                        module.fail_json(**result)
                     result['changed'] = True
                     result['msg'] = cluster
                     result['cluster'] = cluster 
@@ -209,29 +223,31 @@ def run_module():
 
                 except Exception as e:
                     result['changed'] = False
-                    module.fail_json(msg=f'Failed to create the cluster with the following exception from api\nERR: {e}', **result)
+                    result['msg'] = f'Failed to create the cluster with the following exception from api: {e}'
+                    module.fail_json(**result)
                 
     # Otherwise the state is absent and we will delete the cluster
     else:
         # In order to delete the cluster we will need the cluster_id or name at bare minimum 
         if module.params["cluster_id"] is None and module.params["name"] is None:
             # fail because both params are not defined
-            module.fail_json(msg='You must provide either the name, cluster_id, or both to delete a cluster. Please update the corresponding args and try to rerun.', **result)
+            result['msg'] = 'You must provide either the name, cluster_id, or both to delete a cluster. Please update the corresponding args and try to rerun.'
+            module.fail_json( **result)
         # handle cases
         # 1. User specified both cluster_id and name
         # 2. User only specified cluster_id
         if (module.params['cluster_id'] is not None and module.params['name'] is not None) or (module.params["cluster_id"] is not None):
-            # if delete_cluster() succeeds
+
             try:
                 installer.delete_cluster(cluster_id=module.params['cluster_id'])
                 result['changed'] = True
                 result['msg'] = f"Successfully deleted cluster: {module.params['cluster_id']}"
                 module.exit_json(**result)
 
-            except requests.exceptions.HTTPError as e:
+            except Exception as e:
                 result['changed'] = False
                 result['msg'] = f"Failed to delete cluster: {module.params['cluster_id']}\nAPI call returned a bad status code"
-                module.fail_json(msg='Functionality is under development right now... please specify the cluster_id.', **result)
+                module.fail_json(**result)
         # handle the case where user specified name only
         else:
             # need to query for existing clusters and ensure that one does not already exist with that name
@@ -246,7 +262,8 @@ def run_module():
             # all cluster names should be unique, fail if filtered response is greater than 1
             if len(filtered_response) > 1:
                 # fail for one of two reasons listed in message
-                module.fail_json(msg='We ran into a stange error. It seems you have multiple clusters with the same name, or our JMESpath expression is not working as expected.', **result)
+                result['msg'] = 'We ran into a stange error. It seems you have multiple clusters with the same name, or our JMESpath expression is not working as expected.'
+                module.fail_json(**result)
             # now we know we are patching an existing cluster
             if len(filtered_response) == 1:
                 try:

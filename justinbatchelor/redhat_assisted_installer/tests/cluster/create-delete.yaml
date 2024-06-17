@@ -14,9 +14,9 @@
         high_availability_mode: "None"
         http_proxy: ""
         https_proxy: ""
-        hyperthreading: ""
+        # hyperthreading: ""
         ingress_vip: ""
-        network_type: ""
+        # network_type: ""
         service_network_cidr: "172.30.0.0/16"
         user_managed_networking: false
         ssh_authorized_key: ""
