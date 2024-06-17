@@ -41,6 +41,16 @@ This repo also provides a `requirements.yaml` file you can copy and then run the
 
 To learn more about how to use a specific module, please refer to `./plugins/modules/README.md` for more detailed information.
 
-- `cluster_info`
-- `host_info`
-- `infra_env_info`
+#### Info Modules
+
+Implements GET API methods
+
+- `justinbatchelor.redhat_assisted_installer.cluster_info`
+- `justinbatchelor.redhat_assisted_installer.host_info`
+- `justinbatchelor.redhat_assisted_installer.infra_env_info`
+
+#### Create / Update / Delete
+
+Implements the POST / PATCH / DELETE API methods
+
+- `justinbatchelor.redhat_assisted_installer.cluster`
