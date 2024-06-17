@@ -5,7 +5,7 @@ from __future__ import (absolute_import, division, print_function)
 
 from ansible.module_utils.basic import AnsibleModule
 from redhat_assisted_installer import assisted_installer
-from requests.exceptions import HTTPError
+
 
 __metaclass__ = type
 
@@ -69,6 +69,7 @@ def run_module():
     result = dict(
         changed=False,
         infra_env_info='',
+        msg='',
     )
 
     # the AnsibleModule object will be our abstraction working with Ansible
@@ -89,23 +90,21 @@ def run_module():
 
     installer = assisted_installer.assisted_installer()
 
-    if module.params['infra_env_id'] is None:
-        result['infra_env_info'] = installer.get_infrastructure_environements()
-    else:
-        result['infra_env_info'] = installer.get_infrastructure_environements(infra_env_id=module.params['infra_env_id'])
-    
+    try:
+        api_response = None
+        if module.params['infra_env_id'] is None:
+            api_response = installer.get_infrastructure_environements()
+        else:
+            api_response = installer.get_infrastructure_environement(infra_env_id=module.params["infra_env_id"])
+        api_response.raise_for_status()
+        result['infra_env_info'] = [api_response.json()] if isinstance(api_response.json, dict) else api_response.json()
+        result['msg'] = "Success"
+        module.exit_json(**result) 
 
-
-    # during the execution of the module, if there is an exception or a
-    # conditional state that effectively causes a failure, run
-    # AnsibleModule.fail_json() to pass in the message and the result
-    # if module.params['name'] == 'fail me':
-    #     module.fail_json(msg='You requested this to fail', **result)
-
-    # in the event of a successful module execution, you will want to
-    # simple AnsibleModule.exit_json(), passing the key/value results
-    module.exit_json(**result)
-
+    except Exception as e:
+        result['changed'] = False
+        result['msg'] = f"Failed: {e}"
+        module.fail_json(**result)
 
 def main():
     run_module()

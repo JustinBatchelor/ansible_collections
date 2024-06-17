@@ -66,8 +66,6 @@ result:
 '''
 
 
-
-
 def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
@@ -82,6 +80,7 @@ def run_module():
     result = dict(
         changed=False,
         cluster_info='',
+        msg='',
 
     )
 
@@ -100,38 +99,23 @@ def run_module():
     if module.check_mode:
         module.exit_json(**result)
 
-
     installer = assisted_installer.assisted_installer()
 
-    if module.params['cluster_id'] is None:
-        try:
+    try:
+        api_response = None
+        if module.params['cluster_id'] is None:
             api_response = installer.get_clusters()
-            api_response.raise_for_status()
-            result['cluster_info'] = api_response.json()
-        except Exception as e:
-            result['changed'] = False
-            result['msg'] = f'Failed to get the cluster with the following exception from api: {e}'
-            module.fail_json(**result)    
-    else:
-        try:
+        else:
             api_response = installer.get_cluster(cluster_id=module.params['cluster_id'])
-            api_response.raise_for_status()
-            result['cluster_info'] = [api_response.json()]
-        except Exception as e:
-            result['changed'] = False
-            result['msg'] = f'Failed to get the cluster with the following exception from api: {e}'
-            module.fail_json(**result)    
+        api_response.raise_for_status()
+        result['cluster_info'] = [api_response.json()] if isinstance(api_response.json, dict) else api_response.json()
+        result['msg'] = "Success"
+        module.exit_json(**result) 
 
-
-    # during the execution of the module, if there is an exception or a
-    # conditional state that effectively causes a failure, run
-    # AnsibleModule.fail_json() to pass in the message and the result
-    # if module.params['name'] == 'fail me':
-    #     module.fail_json(msg='You requested this to fail', **result)
-
-    # in the event of a successful module execution, you will want to
-    # simple AnsibleModule.exit_json(), passing the key/value results
-    module.exit_json(**result)
+    except Exception as e:
+        result['changed'] = False
+        result['msg'] = f"Failed: {e}"
+        module.fail_json(**result)
 
 
 def main():
