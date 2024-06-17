@@ -86,11 +86,7 @@ def run_module():
     result = dict(
         changed=False,
         msg='',
-        auth={
-            "offline_token": "",
-            "pull_secret": "",
-        },
-        cluster=''
+        cluster='',
     )
 
     # the AnsibleModule object will be our abstraction working with Ansible
@@ -161,7 +157,7 @@ def run_module():
 
             except Exception as e:
                 result['changed'] = False
-                result['msg'] = f'Failed to patch the cluster with the following exception from api: {e}'
+                result['msg'] = f'Failed to patch the cluster: {api_response.json()}'
                 module.fail_json(**result)
 
         """
@@ -177,7 +173,7 @@ def run_module():
                 api_response.raise_for_status()
             except Exception as e:
                 result['changed'] = False
-                result['msg'] = f"Failed to get clusters with the following exception from api: {e}"
+                result['msg'] = f"Failed to get clusters: {api_response.json()}"
                 module.fail_json(**result)
             else:
                 # JMESPath expression to filter objects by name
@@ -203,7 +199,7 @@ def run_module():
 
                     except Exception as e:
                         result['changed'] = False
-                        result['msg'] = f'Failed to patch the cluster with the following exception from api: {e}'
+                        result['msg'] = f'Failed to patch the cluster {api_response.json()}'
                         module.fail_json(**result)
 
                 if len(filtered_response) == 0:
@@ -217,7 +213,7 @@ def run_module():
 
                     except Exception as e:
                         result['changed'] = False
-                        result['msg'] = f'Failed to create the cluster with the following exception from api: {e}'
+                        result['msg'] = f'Failed to create the cluster {api_response.json()}'
                         module.fail_json(**result)
                 
     # Otherwise the state is absent and we will delete the cluster
@@ -247,7 +243,7 @@ def run_module():
                 api_response.raise_for_status()
             except Exception as e:
                 result['changed'] = False
-                result['msg'] = f"Failed to get clusters with the following exception from api: {e}"
+                result['msg'] = f"Failed to get clusters {api_response.json()}"
                 module.fail_json(**result)
             else:
                 # JMESPath expression to filter objects by name
@@ -271,7 +267,7 @@ def run_module():
                     except Exception as e:
                         result['changed'] = False
                         result['msg'] = f"Failed to delete cluster: {module.params['cluster_id']}\nAPI call returned a bad status code"
-                        module.fail_json(msg='Functionality is under development right now... please specify the cluster_id.', **result)
+                        module.fail_json(**result)
             
 
     # during the execution of the module, if there is an exception or a
