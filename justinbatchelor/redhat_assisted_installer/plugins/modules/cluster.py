@@ -51,7 +51,6 @@ RETURN = r'''
 
 '''
 
-
 def run_module():
     module_args = dict(
         state=dict(type='str', required=True, choices=['present', 'absent']),
@@ -110,7 +109,7 @@ def run_module():
     cluster_params = ClusterParams(name=module.params["name"],
                             openshift_version=module.params["openshift_version"],
                             cluster_id=module.params['cluster_id'],
-                            additional_ntp_source=module.params['cluster_id'],
+                            additional_ntp_source=module.params['additional_ntp_source'],
                             api_vip=module.params['api_vip'],
                             base_dns_domain=module.params['base_dns_domain'],
                             cluster_network_cidr=module.params['cluster_network_cidr'],

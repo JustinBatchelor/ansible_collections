@@ -6,8 +6,16 @@
       justinbatchelor.redhat_assisted_installer.infra_env_info:
       register: infra_envs
 
+    - name: Debug infra_envs
+      ansible.builtin.debug:
+        msg: "{{ infra_envs }}"
+
 
     - name: Task to use custom module to get all hosts info from infra_env
       justinbatchelor.redhat_assisted_installer.infra_env_info:
         infra_env_id: "{{ infra_envs['infra_env_info'][0]['id'] }}"
-      register: hosts
+      register: openshift_agents
+
+    - name: Debug hosts
+      ansible.builtin.debug:
+        msg: "{{ openshift_agents }}"

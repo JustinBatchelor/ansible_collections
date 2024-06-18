@@ -4,8 +4,7 @@
 from __future__ import (absolute_import, division, print_function)
 
 from ansible.module_utils.basic import AnsibleModule
-from redhat_assisted_installer import assisted_installer
-from requests.exceptions import HTTPError
+from redhat_assisted_installer.assisted_installer import *
 
 __metaclass__ = type
 
@@ -105,14 +104,12 @@ def run_module():
         module.exit_json(**result)
 
 
-    installer = assisted_installer.assisted_installer()
-
     try:
         api_response = None
         if module.params['host_id'] is None:
-            api_response = installer.get_infrastructure_environement_hosts(infra_env_id=module.params['infra_env_id'])
+            api_response = get_infrastructure_environement_hosts(infra_env_id=module.params['infra_env_id'])
         else:
-            api_response = installer.get_infrastructure_environement_host(infra_env_id=module.params['infra_env_id'], host_id=module.params['host_id'])
+            api_response = get_infrastructure_environement_host(infra_env_id=module.params['infra_env_id'], host_id=module.params['host_id'])
         api_response.raise_for_status()
         result['host_info'] = [api_response.json()] if isinstance(api_response.json, dict) else api_response.json()
         result['msg'] = "Success"

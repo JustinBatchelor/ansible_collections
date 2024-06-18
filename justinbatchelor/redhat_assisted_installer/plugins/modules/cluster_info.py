@@ -4,9 +4,7 @@
 from __future__ import (absolute_import, division, print_function)
 
 from ansible.module_utils.basic import AnsibleModule
-from redhat_assisted_installer import assisted_installer
-import json
-from requests.exceptions import HTTPError
+from redhat_assisted_installer.assisted_installer import *
 
 __metaclass__ = type
 
@@ -99,14 +97,12 @@ def run_module():
     if module.check_mode:
         module.exit_json(**result)
 
-    installer = assisted_installer.assisted_installer()
-
     try:
         api_response = None
         if module.params['cluster_id'] is None:
-            api_response = installer.get_clusters()
+            api_response = get_clusters()
         else:
-            api_response = installer.get_cluster(cluster_id=module.params['cluster_id'])
+            api_response = get_cluster(cluster_id=module.params['cluster_id'])
         api_response.raise_for_status()
         result['cluster_info'] = [api_response.json()] if isinstance(api_response.json, dict) else api_response.json()
         result['msg'] = "Success"

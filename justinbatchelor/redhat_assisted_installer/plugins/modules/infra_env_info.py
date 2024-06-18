@@ -4,7 +4,7 @@
 from __future__ import (absolute_import, division, print_function)
 
 from ansible.module_utils.basic import AnsibleModule
-from redhat_assisted_installer import assisted_installer
+from redhat_assisted_installer.assisted_installer import *
 
 
 __metaclass__ = type
@@ -52,9 +52,6 @@ result:
 
 '''
 
-
-
-
 def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
@@ -88,14 +85,12 @@ def run_module():
         module.exit_json(**result)
 
 
-    installer = assisted_installer.assisted_installer()
-
     try:
         api_response = None
         if module.params['infra_env_id'] is None:
-            api_response = installer.get_infrastructure_environements()
+            api_response = get_infrastructure_environements()
         else:
-            api_response = installer.get_infrastructure_environement(infra_env_id=module.params["infra_env_id"])
+            api_response = get_infrastructure_environement(infra_env_id=module.params["infra_env_id"])
         api_response.raise_for_status()
         result['infra_env_info'] = [api_response.json()] if isinstance(api_response.json, dict) else api_response.json()
         result['msg'] = "Success"
