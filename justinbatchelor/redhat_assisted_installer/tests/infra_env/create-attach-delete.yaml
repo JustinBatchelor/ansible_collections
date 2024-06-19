@@ -1,0 +1,152 @@
+- name: Full Configuration Infra-Env
+  hosts: localhost
+  tasks:
+    - name: Create a fully configured OpenShift cluster
+      justinbatchelor.redhat_assisted_installer.cluster:
+        name: "pypi-testing"
+        additional_ntp_source:
+          - "time.nist.gov"
+          - "us.pool.ntp.org"
+        api_vips:
+          - ip: "192.168.1.100"
+            verification: "unverified"
+        base_dns_domain: "example.com"
+        cluster_networks:
+          - cidr: "10.128.0.0/14"
+            host_prefix: 23
+        service_networks:
+          - cidr: "172.30.0.0/16"
+        machine_networks:
+          - cidr: "192.168.1.0/24"
+        ingress_vips:
+          - ip: "192.168.1.101"
+            verification: "unverified"
+        olm_operators:
+          - name: "certified-operators"
+          - name: "community-operators"
+        openshift_version: "4.15"
+        cpu_architecture: "ppc64le"
+        disk_encryption:
+          enable_on: "all"
+          mode: "tpmv2"
+        http_proxy: "http://proxy.example.com:8080"
+        https_proxy: "http://proxy.example.com:8443"
+        high_availability_mode: "Full"
+        hyperthreading: "all"
+        # offline_token: "{{ lookup('env', 'REDHAT_OFFLINE_TOKEN') }}"
+        # ignition_endpoint:
+        #   ca_certificate: "{{ lookup('file', 'path/to/ca.pem') }}"
+        #   url: "https://ignition.example.com/config"
+        # pull_secret: "{{ lookup('env', 'REDHAT_PULL_SECRET') }}"
+        tags: "production,openshift"
+        ssh_public_key: "{{ lookup('file', '/home/jbatchel/.ssh/id_rsa.pub') }}"
+        state: "present"
+      register: cluster
+
+    - name: Debug returned cluster
+      ansible.builtin.debug:
+        msg: "{{ cluster }}"
+
+    - name: Create a fully configured infra-env
+      justinbatchelor.redhat_assisted_installer.infra_env:
+        name: "pypi-testing"
+        state: "present"
+        additional_ntp_source:
+          - "ntp1.example.com"
+          - "ntp2.example.com"
+        cpu_architecture: "ppc64le"
+        cluster_id: "{{ cluster['cluster'][0]['id'] }}"
+        ignition_config_override: |
+          {
+            "ignition": {
+              "version": "3.2.0"
+            },
+            "storage": {
+              "files": [
+                {
+                  "path": "/etc/sysctl.d/99-sysctl.conf",
+                  "mode": 420,
+                  "overwrite": true,
+                  "contents": {
+                    "source": "data:,net.ipv4.ip_forward=1"
+                  }
+                }
+              ]
+            }
+          }
+        image_type: "full-iso"
+        kernel_arguments:
+          - operation: "append"
+            value: "quiet"
+        openshift_version: "4.15"
+        proxy:
+          http_proxy: "http://proxy.example.com:8080"
+          https_proxy: "http://proxy.example.com:8443"
+          no_proxy: "localhost,127.0.0.1,.example.com"
+        static_network_config:
+          - mac_interface_map:
+              - logical_nic_name: "eth0"
+                mac_address: "00:1A:2B:3C:4D:5E"
+            network_yaml: |
+              interfaces:
+                - name: eth0
+                  type: ethernet
+                  state: up
+                  mac-address: 00:1A:2B:3C:4D:5E
+                  ipv4:
+                    enabled: true
+                    address:
+                      - ip: 192.168.1.10
+                        prefix-length: 24
+                    dhcp: false
+                  ipv6:
+                    enabled: false
+
+                - name: eth1
+                  type: ethernet
+                  state: up
+                  mac-address: 00:1A:2B:3C:4D:5F
+                  ipv4:
+                    enabled: true
+                    dhcp: true
+                  ipv6:
+                    enabled: false
+
+              dns-resolver:
+                config:
+                  server:
+                    - 8.8.8.8
+                    - 8.8.4.4
+              routes:
+                config:
+                  - destination: 0.0.0.0/0
+                    next-hop-address: 192.168.1.1
+                    next-hop-interface: eth0
+                    table-id: 254
+        # pull_secret: "{{ lookup('file', 'path/to/pull-secret.json') }}"
+        # ssh_authorized_key: "{{ lookup('file', 'path/to/ssh_authorized_key.pub') }}"
+      register: infra_env
+
+    - name: Debug returned infra_env
+      ansible.builtin.debug:
+        msg: "{{ infra_env }}"
+
+    - name: Delete infra_env
+      justinbatchelor.redhat_assisted_installer.infra_env:
+        state: absent
+        infra_env_id: "{{ infra_env['infra_env'][0]['id'] }}"
+      register: deleted_infra
+
+    - name: Debug deleted infra_env
+      ansible.builtin.debug:
+        msg: "{{ deleted_infra }}"
+
+    - name: Delete cluster
+      justinbatchelor.redhat_assisted_installer.cluster:
+        state: absent
+        cluster_id: "{{ cluster['cluster'][0]['id'] }}"
+      register: cluster
+
+    - name: Debug deleted cluster
+      ansible.builtin.debug:
+        msg: "{{ cluster }}"

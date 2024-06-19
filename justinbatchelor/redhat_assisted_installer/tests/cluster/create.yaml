@@ -2,28 +2,69 @@
   hosts: localhost
 
   tasks:
-    - name: Create a new OpenShift cluster
+    # - name: Create a new OpenShift cluster
+    #   justinbatchelor.redhat_assisted_installer.cluster:
+    #     name: "pypi-testing"
+    #     openshift_version: "4.15"
+    #     # cluster_id: ""
+    #     # additional_ntp_source: ""
+    #     # api_vip: ""
+    #     base_dns_domain: "batchelor.com"
+    #     # cluster_network_cidr: ""
+    #     # cluster_network_host_prefix: 23
+    #     # cpu_architecture: ""
+    #     # high_availability_mode: ""
+    #     # http_proxy: ""
+    #     # https_proxy: ""
+    #     # hyperthreading: ""
+    #     # ingress_vip: ""
+    #     # network_type: ""
+    #     # service_network_cidr: ""
+    #     # user_managed_networking: ""
+    #     # ssh_authorized_key: ""
+    #     # vip_dhcp_allocation: ""
+    #     state: present
+    #   register: cluster
+
+    - name: Create a fully configured OpenShift cluster
       justinbatchelor.redhat_assisted_installer.cluster:
         name: "pypi-testing"
+        additional_ntp_source:
+          - "time.nist.gov"
+          - "us.pool.ntp.org"
+        api_vips:
+          - ip: "192.168.1.100"
+            verification: "unverified"
+        base_dns_domain: "example.com"
+        cluster_networks:
+          - cidr: "10.128.0.0/14"
+            host_prefix: 23
+        service_networks:
+          - cidr: "172.30.0.0/16"
+        machine_networks:
+          - cidr: "192.168.1.0/24"
+        ingress_vips:
+          - ip: "192.168.1.101"
+            verification: "unverified"
+        olm_operators:
+          - name: "certified-operators"
+          - name: "community-operators"
         openshift_version: "4.15"
-        # cluster_id: ""
-        # additional_ntp_source: ""
-        # api_vip: ""
-        base_dns_domain: "batchelor.com"
-        # cluster_network_cidr: ""
-        # cluster_network_host_prefix: 23
-        # cpu_architecture: ""
-        # high_availability_mode: ""
-        # http_proxy: ""
-        # https_proxy: ""
-        # hyperthreading: ""
-        # ingress_vip: ""
-        # network_type: ""
-        # service_network_cidr: ""
-        # user_managed_networking: ""
-        # ssh_authorized_key: ""
-        # vip_dhcp_allocation: ""
-        state: present
+        cpu_architecture: "x86_64"
+        disk_encryption:
+          enable_on: "all"
+          mode: "tpmv2"
+        http_proxy: "http://proxy.example.com:8080"
+        https_proxy: "http://proxy.example.com:8443"
+        high_availability_mode: "Full"
+        hyperthreading: "all"
+        # ignition_endpoint:
+        #   ca_certificate: "{{ lookup('file', 'path/to/ca.pem') }}"
+        #   url: "https://ignition.example.com/config"
+        # pull_secret: "{{ lookup('file', 'path/to/pull-secret.json') }}"
+        tags: "production,openshift"
+        # ssh_public_key: "{{ lookup('file', 'path/to/ssh_public_key.pub') }}"
+        state: "present"
       register: cluster
 
     - name: Debug returned cluster

@@ -1,0 +1,12 @@
+- name: Manage OpenShift infra_env
+  hosts: localhost
+  vars_prompt:
+    - name: infra_env_id
+      prompt: Please enter the infra_env_id you want to delete
+      private: false
+
+  tasks:
+    - name: Task to delete OpenShift infra_env with infra_env_id {{ infra_env_id }}
+      justinbatchelor.redhat_assisted_installer.infra_env:
+        state: absent
+        infra_env_id: "{{ infra_env_id }}"

@@ -66,6 +66,7 @@ def run_module():
     result = dict(
         changed=False,
         infra_env_info='',
+        count='',
         msg='',
     )
 
@@ -92,7 +93,8 @@ def run_module():
         else:
             api_response = get_infrastructure_environement(infra_env_id=module.params["infra_env_id"])
         api_response.raise_for_status()
-        result['infra_env_info'] = [api_response.json()] if isinstance(api_response.json, dict) else api_response.json()
+        result['infra_env_info'] = [api_response.json()] if isinstance(api_response.json(), dict) else api_response.json()
+        result['count'] = len([api_response.json()]) if isinstance(api_response.json(), dict) else len(api_response.json())
         result['msg'] = "Success"
         module.exit_json(**result) 
 
