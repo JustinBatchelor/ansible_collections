@@ -1,6 +1,7 @@
 import os
 
 from .schema import APIObject
+
 """
 {
   "additional_ntp_source": {
@@ -293,6 +294,7 @@ from .schema import APIObject
 }
 
 """
+
 class APIVIP(APIObject):
     def __init__(self,
                  cluster_id: str = None,

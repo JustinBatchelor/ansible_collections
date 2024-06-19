@@ -1,21 +1,18 @@
-## Code to disable creating pycache dir after running
-import sys, requests, os
-sys.dont_write_bytecode = True
-###################################################
 
+import requests
+
+## import url encoding functions
 from urllib.parse import urlencode
 
+## import the python classes that implement the various schemas defined and used by the api
 from .schema.cluster import *
-
 from .schema.infra_env import *
 
+## importing helper functions
 from .tools import *
 
-from requests import Response
 
 API_BASE = "https://api.openshift.com/api/assisted-install/v2/"
-
-
 
 def __get_headers():
     return  {
@@ -46,20 +43,20 @@ def __get_access_token():
     return access_token
 
 
-def get_cluster(cluster_id: str=None) -> Response:
+def get_cluster(cluster_id: str=None) -> requests.Response:
     url = API_BASE + f"clusters/{cluster_id}"
 
     response = requests.get(url, headers=__get_headers())
     return response   
 
-def get_default_config() -> Response:
+def get_default_config() -> requests.Response:
     url = API_BASE + f"clusters/default-config"
 
     response = requests.get(url, headers=__get_headers())
  
     return response
 
-def get_clusters(with_hosts: bool=False, owner: str=None) -> Response:
+def get_clusters(with_hosts: bool=False, owner: str=None) -> requests.Response:
     url = API_BASE + "clusters"
 
     if with_hosts:
@@ -76,7 +73,7 @@ def get_clusters(with_hosts: bool=False, owner: str=None) -> Response:
  
     return response
 
-def post_cluster(cluster: Cluster) -> Response:
+def post_cluster(cluster: Cluster) -> requests.Response:
     VALID_POST_PARAMS = [
         "additional_ntp_source","api_vips","base_dns_domain","cluster_networks","cpu_architecture","disk_encryption",
         "high_availability_mode","http_proxy","https_proxy","hyperthreading","ignition_endpoint","ingress_vips",
@@ -93,7 +90,7 @@ def post_cluster(cluster: Cluster) -> Response:
  
     return response
 
-def patch_cluster(cluster: Cluster) -> Response:
+def patch_cluster(cluster: Cluster) -> requests.Response:
     VALID_PATCH_PARAMS = [
         "additional_ntp_source","api_vips","base_dns_domain","cluster_network_cidr",
         "cluster_network_host_prefix","cluster_networks","disk_encryption","http_proxy","https_proxy","hyperthreading",
@@ -125,7 +122,7 @@ def delete_cluster(cluster_id: str) -> bool:
     response = requests.delete(url, headers=__get_headers())
     return True if (response.status_code == 204) else False
 
-def get_infrastructure_environement(infra_env_id: str) -> Response:
+def get_infrastructure_environement(infra_env_id: str) -> requests.Response:
     url = API_BASE + f"infra-envs/{infra_env_id}"
 
     response = requests.get(url, headers=__get_headers())
@@ -133,14 +130,14 @@ def get_infrastructure_environement(infra_env_id: str) -> Response:
     return response
 
 # Method that will implement the /v2/infra-envs GET assisted installer endpoint
-def get_infrastructure_environements() -> Response:
+def get_infrastructure_environements() -> requests.Response:
     url = API_BASE + "infra-envs"
     
     response = requests.get(url, headers=__get_headers())
  
     return response
     
-def patch_infrastructure_environment(infra_env: InfraEnv) -> Response:
+def patch_infrastructure_environment(infra_env: InfraEnv) -> requests.Response:
     VALID_PATCH_PARAMS =  [
         "additional_ntp_sources","additional_trust_bundle","ignition_config_override","image_type",
         "kernel_arguments","proxy","pull_secret","ssh_authorized_key","static_network_config",
@@ -164,7 +161,7 @@ def patch_infrastructure_environment(infra_env: InfraEnv) -> Response:
  
     return response
 
-def post_infrastructure_environment(infra_env: InfraEnv) -> Response:
+def post_infrastructure_environment(infra_env: InfraEnv) -> requests.Response:
     VALID_POST_PARAMS = [
         "additional_ntp_sources","additional_trust_bundle","cluster_id","cpu_architecture",
         "ignition_config_override","image_type","kernel_arguments","name","openshift_version",
@@ -251,14 +248,14 @@ def cluster_get_files(cluster_id: str, file_name: str = "install-config.yaml"):
     response = requests.get(url, headers=__get_headers(), params=query_string)
     return response
 
-def get_infrastructure_environement_hosts(infra_env_id: str) -> Response:
+def get_infrastructure_environement_hosts(infra_env_id: str) -> requests.Response:
     url = API_BASE + f"infra-envs/{infra_env_id}/hosts"
 
     response = requests.get(url, headers=__get_headers())
  
     return response
 
-def get_infrastructure_environement_host(infra_env_id: str, host_id: str) -> Response:
+def get_infrastructure_environement_host(infra_env_id: str, host_id: str) -> requests.Response:
     url = API_BASE + f"infra-envs/{infra_env_id}/hosts/{host_id}"
 
     response = requests.get(url, headers=__get_headers())

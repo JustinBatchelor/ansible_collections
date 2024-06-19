@@ -42,7 +42,7 @@ EXAMPLES = r'''
 
 - name: Task to get a specific infra_env
     justinbatchelor.redhat_assisted_installer.infra_env_info:
-        infra_env_id: "2c478929-bdec-4c02-9bcf-xxxxxxxxxxxx"
+        infra_env_id: "abcdefgh-ijkl-mnop-qrst-xxxxxxxxxxxx"
     register: hosts
 '''
 
@@ -50,6 +50,7 @@ RETURN = r'''
 
 result:
     changed: <bool>
+    count: <int>
     infra_env_info: List<infra_env>
 
 '''

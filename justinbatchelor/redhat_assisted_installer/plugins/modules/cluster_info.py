@@ -32,8 +32,7 @@ options:
       required: False
 
 requirements:
-  - "python >= 3.12"
-  - "requirements.txt"
+
 
 
 author:
