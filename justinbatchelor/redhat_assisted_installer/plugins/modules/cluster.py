@@ -4,9 +4,10 @@
 from __future__ import (absolute_import, division, print_function)
 
 from ansible.module_utils.basic import AnsibleModule
-from redhat_assisted_installer.assisted_installer import *
-from redhat_assisted_installer.lib.schema.cluster import *
+
+from ..module_utils.api import *
 from ..module_utils.tools import *
+from ..module_utils.schema.cluster import *
 
 import jmespath, os
 

@@ -1,6 +1,21 @@
-import re, yaml
-from redhat_assisted_installer.lib.schema.cluster import *
-from redhat_assisted_installer.lib.schema.infra_env import *
+import re
+
+from ..module_utils.schema.cluster import *
+from ..module_utils.schema.infra_env import *
+
+def filter_dict_by_keys(data, valid_keys):
+    """
+    Filters a dictionary, removing any keys not in the valid_keys list.
+
+    Parameters:
+    data (dict): The dictionary to filter.
+    valid_keys (list): The list of valid keys.
+
+    Returns:
+    dict: A new dictionary with only the valid keys.
+    """
+    return {key: value for key, value in data.items() if key in valid_keys}
+
 
 def is_valid_http_proxy(proxy: str) -> bool:
     """
