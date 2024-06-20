@@ -13,62 +13,68 @@ __metaclass__ = type
 DOCUMENTATION = r'''
 ---
 module: host_info
-
-short_description: Module to communicate with the red hat assisted installer to get information about all or specific openshift agents 
-
+short_description: Communicate with the Red Hat Assisted Installer to get information about all or specific OpenShift agents
 version_added: "1.0.0"
-
-description: 
-
+description: >
+  This module allows you to retrieve information about OpenShift agents from the Red Hat Assisted Installer,
+  either for all hosts within an infrastructure environment or for a specific host.
 options:
-    infra_env_id:
-      description:
-      - ID for the assisted installer managed infrastructure environment
-      type: str
-      default: None
-      required: True
-
-    host_id:
-      description:
-      - ID for the assisted installer managed host associated with the infra_env_id
-      type: str
-      default: None
-      required: False
-
+  infra_env_id:
+    description:
+      - ID for the assisted installer managed infrastructure environment.
+    type: str
+    required: true
+  host_id:
+    description:
+      - ID for the assisted installer managed host associated with the infra_env_id.
+    type: str
+    required: false
 author:
-    - Justin Batchelor (@justinbatchelor)
+  - Justin Batchelor (@justinbatchelor)
 '''
 
 EXAMPLES = r'''
-- name: Task to use custom module to get all infra_env objects
-    justinbatchelor.redhat_assisted_installer.infra_env_info:
-    register: infra_envs
-
-- debug:
-    msg: "{{ infra_envs }}"
-
-- name: Task to use custom module to get all hosts info from infra_env
-    justinbatchelor.redhat_assisted_installer.host_info:
-    infra_env_id: "{{ infra_envs['infra_env_info'][0]['id'] }}"
-    register: hosts
+- name: Get all hosts info from infra_env
+  justinbatchelor.redhat_assisted_installer.host_info:
+    infra_env_id: "your_infra_env_id"
+  register: hosts
 
 - debug:
     msg: "{{ hosts }}"
 
-- name: Task to use custom module to get specific host info 
-    justinbatchelor.redhat_assisted_installer.host_info:
-    infra_env_id: "{{ infra_envs['infra_env_info'][0]['id'] }}"
-    host_id: "{{ hosts['host_info'][0]['id'] }}"
-    register: host
+- name: Get specific host info
+  justinbatchelor.redhat_assisted_installer.host_info:
+    infra_env_id: "your_infra_env_id"
+    host_id: "your_host_id"
+  register: host
 
 - debug:
-    msg: "{{ host['host_info'][0]['id'] }}"
+    msg: "{{ host }}"
 '''
 
 RETURN = r'''
-result:
-    changed: <bool>
-    host_info: List<host>
+host_info:
+  description: >
+    List of host information retrieved from the Red Hat Assisted Installer.
+  returned: always
+  type: list
+  elements: dict
+  sample: 
+    - id: "123"
+      name: "host1"
+      status: "active"
+count:
+  description: >
+    The number of hosts returned.
+  returned: always
+  type: int
+  sample: 1
+msg:
+  description: >
+    Message indicating the status of the operation.
+  returned: always
+  type: str
+  sample: "Success"
 '''
 
 
@@ -87,6 +93,7 @@ def run_module():
     result = dict(
         changed=False,
         host_info='',
+        count="",
         msg='',
     )
 
@@ -114,6 +121,7 @@ def run_module():
             api_response = get_infrastructure_environement_host(infra_env_id=module.params['infra_env_id'], host_id=module.params['host_id'])
         api_response.raise_for_status()
         result['host_info'] = [api_response.json()] if isinstance(api_response.json, dict) else api_response.json()
+        result['count'] = len([api_response.json()]) if isinstance(api_response.json(), dict) else len(api_response.json())
         result['msg'] = "Success"
         module.exit_json(**result) 
 

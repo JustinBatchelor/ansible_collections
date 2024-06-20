@@ -17,138 +17,109 @@ __metaclass__ = type
 DOCUMENTATION = r'''
 ---
 module: infra_env
-short_description: Manage OpenShift infra-env
-description:
-  - This module allows managing OpenShift infra-env.
+short_description: Manage infrastructure environments
+version_added: "1.0.0"
+description: >
+  This module allows managing infrastructure environments using the Red Hat Assisted Installer API.
 options:
-  additional_ntp_sources:
-    description: A comma-separated list of NTP sources (name or IP) going to be added to all the hosts.
+  infra_env_id:
+    description: ID for the assisted installer managed infrastructure environment.
     type: str
     required: false
-  additional_trust_bundle:
-    description: PEM-encoded X.509 certificate bundle. Hosts discovered by this infra-env will trust the certificates in this bundle. Clusters formed from the hosts discovered by this infra-env will also trust the certificates in this bundle.
-    type: str
-    required: false
-    maxLength: 65535
-  cluster_id:
-    description: If set, all hosts that register will be associated with the specified cluster.
-    type: str
-    required: false
-    format: uuid
-  cpu_architecture:
-    description: The CPU architecture of the image.
-    type: str
-    required: false
-    default: x86_64
-    choices: ["x86_64", "aarch64", "arm64", "ppc64le", "s390x"]
-  ignition_config_override:
-    description: JSON formatted string containing the user overrides for the initial ignition config.
-    type: str
-    required: false
-  image_type:
-    description: Type of the image.
-    type: str
-    required: false
-    choices: ["full-iso", "minimal-iso"]
-  kernel_arguments:
-    description: List of kernel argument objects that define the operations and values to be applied.
-    type: list
-    required: false
-    elements: dict
-    suboptions:
-      description:
-        description: Pair of [operation, argument] specifying the argument and what operation should be applied on it.
-        type: str
-        required: false
-      operation:
-        description: The operation to apply on the kernel argument.
-        type: str
-        required: false
-        choices: ["append", "replace", "delete"]
-      value:
-        description: Kernel argument can have the form or =. The following examples should be supported: rd.net.timeout.carrier=60, isolcpus=1,2,10-20,100-2000:2/25, quiet. The parsing by the command line parser in linux kernel is much looser and this pattern follows it.
-        type: str
-        required: false
-        pattern: "^(?:(?:[^ \t\n\r\"]+)|(?:\"[^\"]*\"))+?$"
   name:
-    description: Name of the infra-env.
+    description: Name of the infrastructure environment.
     type: str
     required: false
   openshift_version:
-    description: Version of the OpenShift cluster.
+    description: Version of OpenShift to install.
+    type: str
+    required: false
+  pull_secret:
+    description: Pull secret for accessing OpenShift images.
+    type: str
+    required: false
+    no_log: true
+  ssh_public_key:
+    description: SSH public key for accessing nodes.
     type: str
     required: false
   proxy:
-    description: Proxy configuration for the infra-env.
+    description: Proxy settings for the infrastructure environment.
     type: dict
     required: false
     suboptions:
       http_proxy:
-        description: A proxy URL to use for creating HTTP connections outside the cluster.
+        description: HTTP proxy URL.
         type: str
         required: false
       https_proxy:
-        description: A proxy URL to use for creating HTTPS connections outside the cluster.
+        description: HTTPS proxy URL.
         type: str
         required: false
       no_proxy:
-        description: An "*" or a comma-separated list of destination domain names, domains, IP addresses, or other network CIDRs to exclude from proxying.
+        description: List of URLs that should not be proxied.
         type: str
         required: false
-  pull_secret:
-    description: The pull secret obtained from Red Hat OpenShift Cluster Manager.
+  state:
+    description: Desired state of the infrastructure environment.
     type: str
-    required: false
-  ssh_authorized_key:
-    description: SSH public key for debugging the installation.
-    type: str
-    required: false
-  static_network_config:
-    description: Static network configuration.
-    type: list
-    required: false
-    elements: dict
-    suboptions:
-      mac_interface_map:
-        description: List of MAC to logical interface mappings.
-        type: list
-        required: false
-        elements: dict
-        suboptions:
-          logical_nic_name:
-            description: NIC name used in the yaml, which relates 1:1 to the MAC address.
-            type: str
-            required: false
-          mac_address:
-            description: MAC address present on the host.
-            type: str
-            required: false
-            pattern: "^([0-9A-Fa-f]{2}[:]){5}([0-9A-Fa-f]{2})$"
-      network_yaml:
-        description: YAML string that can be processed by nmstate.
-        type: str
-        required: false
-author:
-  - Justin Batchelor (@justinbatchelor)
-
-
+    required: true
+    choices: ['present', 'absent']
 
 requirements:
-  - "python >= 3.12"
-  - "requirements.txt"
-
+  - requests==2.32.3
+  - ansible==10.1.0
+  - jmespath==1.0.1
 
 author:
-    - Justin Batchelor (@justinbatchelor)
+  - Justin Batchelor (@justinbatchelor)
 '''
 
 EXAMPLES = r'''
+# Create a new infrastructure environment
+- name: Create a new infrastructure environment
+  justinbatchelor.redhat_assisted_installer.infra_env:
+    state: present
+    name: "my-new-infra-env"
+    openshift_version: "4.8"
+    pull_secret: "{{ lookup('file', 'path/to/pull-secret.txt') }}"
+    ssh_public_key: "{{ lookup('file', 'path/to/ssh-key.pub') }}"
+  register: result
 
+- debug:
+    msg: "{{ result }}"
+
+# Delete an existing infrastructure environment
+- name: Delete an infrastructure environment
+  justinbatchelor.redhat_assisted_installer.infra_env:
+    state: absent
+    infra_env_id: "your-infra-env-id"
+  register: result
+
+- debug:
+    msg: "{{ result }}"
 '''
 
 RETURN = r'''
-
+infra_env:
+  description: >
+    Details of the created, updated, or deleted infrastructure environment.
+  returned: always
+  type: list
+  elements: dict
+  sample: 
+    - id: "123"
+      name: "my-infra-env"
+      status: "active"
+msg:
+  description: >
+    Message indicating the status of the operation.
+  returned: always
+  type: str
+  sample: "Successfully created the infrastructure environment."
 '''
+
+
 def run_module():
     module_args = dict(
         additional_ntp_source=dict(type='list', required=False),

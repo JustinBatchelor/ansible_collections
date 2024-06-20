@@ -14,11 +14,12 @@ import jmespath, os
 __metaclass__ = type
 
 DOCUMENTATION = r'''
-
+---
 module: cluster
 short_description: Manage OpenShift clusters
-description:
-  - This module allows managing OpenShift clusters.
+version_added: "1.0.0"
+description: >
+  This module allows managing OpenShift clusters using the Red Hat Assisted Installer API.
 options:
   additional_ntp_source:
     description: A list of NTP sources (name or IP) to be added to all the hosts.
@@ -258,22 +259,62 @@ options:
     type: bool
     required: false
 
+
 requirements:
-  - "python >= 3.12"
-  - "requirements.txt"
+  - requests==2.32.3
+  - ansible==10.1.0
+  - jmespath==1.0.1
 
-
+  
 author:
-    - Justin Batchelor (@justinbatchelor)
+  - Justin Batchelor (@justinbatchelor)
 '''
 
 EXAMPLES = r'''
+# Create a new OpenShift cluster
+- name: Create a new OpenShift cluster
+  justinbatchelor.redhat_assisted_installer.cluster:
+    state: present
+    name: "my-new-cluster"
+    base_dns_domain: "example.com"
+    pull_secret: "{{ lookup('file', 'path/to/pull-secret.txt') }}"
+    ssh_public_key: "{{ lookup('file', 'path/to/ssh-key.pub') }}"
+  register: result
 
+- debug:
+    msg: "{{ result }}"
+
+# Delete an existing OpenShift cluster
+- name: Delete an OpenShift cluster
+  justinbatchelor.redhat_assisted_installer.cluster:
+    state: absent
+    cluster_id: "your-cluster-id"
+  register: result
+
+- debug:
+    msg: "{{ result }}"
 '''
 
 RETURN = r'''
-
+cluster:
+  description: >
+    Details of the created, updated, or deleted cluster.
+  returned: always
+  type: list
+  elements: dict
+  sample: 
+    - id: "123"
+      name: "my-cluster"
+      status: "active"
+msg:
+  description: >
+    Message indicating the status of the operation.
+  returned: always
+  type: str
+  sample: "Successfully created the cluster."
 '''
+
+
 
 
 def run_module():

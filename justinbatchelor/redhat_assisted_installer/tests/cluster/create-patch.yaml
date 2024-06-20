@@ -55,11 +55,24 @@
       ansible.builtin.debug:
         msg: "{{ cluster_info['cluster_info'] }}"
 
-    - name: Patch existing cluster's base dns
+    - name: Patch a fully configured OpenShift cluster
       justinbatchelor.redhat_assisted_installer.cluster:
-        state: present
+        name: "pypi-testing"
         cluster_id: "{{ cluster['cluster'][0]['id'] }}"
+        additional_ntp_source:
+          - "time.nist.gov"
         base_dns_domain: "batchelor.live"
+        olm_operators:
+          - name: "certified-operators"
+          - name: "community-operators"
+        hyperthreading: "all"
+        # ignition_endpoint:
+        #   ca_certificate: "{{ lookup('file', 'path/to/ca.pem') }}"
+        #   url: "https://ignition.example.com/config"
+        # pull_secret: "{{ lookup('file', 'path/to/pull-secret.json') }}"
+        tags: "production,openshift"
+        # ssh_public_key: "{{ lookup('file', 'path/to/ssh_public_key.pub') }}"
+        state: "present"
       register: cluster
 
     - name: Debug returned patched cluster

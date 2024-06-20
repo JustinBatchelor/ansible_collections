@@ -14,45 +14,63 @@ __metaclass__ = type
 DOCUMENTATION = r'''
 ---
 module: infra_env_info
-
-short_description: Module to communicatee with the red hat assisted installer to get information about all or specific infrastrucuture environments
-
+short_description: Get information about all or specific infrastructure environments from the Red Hat Assisted Installer
 version_added: "1.0.0"
-
-description: Module that implements the 'redhat-assisted-installer' python package to provide an easier way to communicate with the red hat assisted installer api
-
+description: >
+  This module allows you to retrieve information about infrastructure environments managed by the Red Hat Assisted Installer,
+  either for all environments or for a specific environment identified by its infra_env_id.
 options:
-    infra_env_id:
-      description:
-      - ID for the assisted installer managed infrastructure environment
-      type: str
-      default: None
-      required: False
-
+  infra_env_id:
+    description:
+      - ID for the assisted installer managed infrastructure environment.
+    type: str
+    required: false
 author:
-    - Justin Batchelor (@justinbatchelor)
+  - Justin Batchelor (@justinbatchelor)
 '''
 
 EXAMPLES = r'''
-- name: Task to get all infra_env objects
-    justinbatchelor.redhat_assisted_installer.infra_env_info:
-    register: infra_envs
+# Retrieve information about all infrastructure environments
+- name: Get all infra_env objects
+  justinbatchelor.redhat_assisted_installer.infra_env_info:
+  register: infra_envs
 
+- debug:
+    msg: "{{ infra_envs }}"
 
+# Retrieve information about a specific infrastructure environment
+- name: Get a specific infra_env
+  justinbatchelor.redhat_assisted_installer.infra_env_info:
+    infra_env_id: "abcdefgh-ijkl-mnop-qrst-xxxxxxxxxxxx"
+  register: specific_infra_env
 
-- name: Task to get a specific infra_env
-    justinbatchelor.redhat_assisted_installer.infra_env_info:
-        infra_env_id: "abcdefgh-ijkl-mnop-qrst-xxxxxxxxxxxx"
-    register: hosts
+- debug:
+    msg: "{{ specific_infra_env }}"
 '''
 
 RETURN = r'''
-
-result:
-    changed: <bool>
-    count: <int>
-    infra_env_info: List<infra_env>
-
+infra_env_info:
+  description: >
+    List of infrastructure environment information retrieved from the Red Hat Assisted Installer.
+  returned: always
+  type: list
+  elements: dict
+  sample: 
+    - id: "123"
+      name: "infra_env1"
+      status: "active"
+count:
+  description: >
+    The number of infrastructure environments returned.
+  returned: always
+  type: int
+  sample: 1
+msg:
+  description: >
+    Message indicating the status of the operation.
+  returned: always
+  type: str
+  sample: "Success"
 '''
 
 def run_module():

@@ -14,43 +14,32 @@ __metaclass__ = type
 DOCUMENTATION = r'''
 ---
 module: cluster_info
-
-short_description: 
-
-# If this is part of a collection, you need to use semantic versioning,
-# i.e. the version is of the form "2.5.0" and not "2.4".
+short_description: Retrieve information about OpenShift clusters managed by the Red Hat Assisted Installer
 version_added: "1.0.0"
-
-description: 
-
+description: >
+  This module allows you to retrieve information about OpenShift clusters from the Red Hat Assisted Installer,
+  either for all clusters or for a specific cluster identified by its cluster_id.
 options:
-    cluster_id:
-      description:
-      - Cluster ID for the assisted installer managed cluster
-      type: str
-      default: None
-      required: False
-
-requirements:
-
-
-
+  cluster_id:
+    description:
+      - Cluster ID for the assisted installer managed cluster.
+    type: str
+    required: false
 author:
-    - Justin Batchelor (@justinbatchelor)
+  - Justin Batchelor (@justinbatchelor)
 '''
 
 EXAMPLES = r'''
-# Implements the /v2/clusters/ endpoint with default query parameters and returns a list of all clusters
-- name: Task to use custom module with no arguments
+# Retrieve information about all clusters
+- name: Get information about all clusters
   justinbatchelor.redhat_assisted_installer.cluster_info:
   register: all_cluster_info
 
 - debug:
     msg: "{{ all_cluster_info }}"
 
-
-# Implements the /v2/clusters/{cluster_id} endpoint and returns a list containing that cluster if it exists
-- name: Task to use custom module with argument
+# Retrieve information about a specific cluster
+- name: Get information about a specific cluster
   justinbatchelor.redhat_assisted_installer.cluster_info:
     cluster_id: '{{ all_cluster_info["cluster_info"][0]["id"] }}'
   register: cluster_info
@@ -60,11 +49,29 @@ EXAMPLES = r'''
 '''
 
 RETURN = r'''
-result:
-  changed: <bool>
-  cluster_info: List<Cluster>
+cluster_info:
+  description: >
+    List of cluster information retrieved from the Red Hat Assisted Installer.
+  returned: always
+  type: list
+  elements: dict
+  sample: 
+    - id: "123"
+      name: "cluster1"
+      status: "active"
+count:
+  description: >
+    The number of clusters returned.
+  returned: always
+  type: int
+  sample: 1
+msg:
+  description: >
+    Message indicating the status of the operation.
+  returned: always
+  type: str
+  sample: "Success"
 '''
-
 
 def run_module():
     # define available arguments/parameters a user can pass to the module

@@ -5,7 +5,9 @@ Various modules that implement the Red Hat Assisted Installer
 - [API | Docs](https://developers.redhat.com/api-catalog/api/assisted-install-service#content-operations) 
 - [API | Service](https://api.openshift.com/?urls.primaryName=assisted-service%20service)
 
-## cluster_info
+## Info Modules
+
+### cluster_info
 
 Cluster info is a module that seeks to implement the following endpoints from the Red Hat Assisted Installer
 
@@ -15,23 +17,24 @@ Cluster info is a module that seeks to implement the following endpoints from th
 | GET      | `/v2/clusters/{cluster_id}` | None | Retrieves the details of the OpenShift cluster. |
 
 
-### Arguments
+#### Arguments
 
 | Name          | Description               | Type      | Default       | Choices               | Required | 
 | ------------- | ------------------------- | --------- | ------------- | --------------------- | -------- |
 | cluster_id    | Cluster ID for the assisted installer managed cluster |  str | None | any | False |  
 
 
-### Returns
+#### Returns
 
 A list of clusters defined by the [API schema cluster](https://developers.redhat.com/api-catalog/api/assisted-install-service#schema-cluster)
 
     result:
       changed: <bool>
       cluster_info: List<Cluster>
+      count: <int>
 
 
-### Examples
+#### Examples
 
     # Implements the /v2/clusters/ endpoint with default query parameters and returns a list of all clusters
     - name: Task to use custom module with no arguments
@@ -52,7 +55,7 @@ A list of clusters defined by the [API schema cluster](https://developers.redhat
         msg: "{{ cluster_info['cluster_info'][0] }}"
 
 
-## host_info
+### host_info
 
 Cluster info is a module that seeks to implement the following endpoints from the Red Hat Assisted Installer
 
@@ -62,14 +65,14 @@ Cluster info is a module that seeks to implement the following endpoints from th
 | GET      | `/v2/infra-envs/{infra_env_id}/hosts/{host_id}` | None | Retrieves the details of the OpenShift host. |
 
 
-### Arguments
+#### Arguments
 
 | Name          | Description               | Type      | Default       | Choices               | Required | 
 | ------------- | ------------------------- | --------- | ------------- | --------------------- | -------- |
 | infra_env_id  | ID for the assisted installer managed infrastructure environment |  str | None | any | True |
 | host_id       | ID for the openshift host | str | None | any | False
 
-### Returns
+#### Returns
 
 A list of hosts defined by the [API schema host](https://developers.redhat.com/api-catalog/api/assisted-install-service#schema-host)
 
@@ -78,7 +81,7 @@ A list of hosts defined by the [API schema host](https://developers.redhat.com/a
       hosts: List<host>
 
 
-### Examples
+#### Examples
     # Use infra_env_info module to get a list of infra_envs
     - name: Task to get all infra_env objects associated with account
       justinbatchelor.redhat_assisted_installer.infra_env_info:
@@ -97,7 +100,7 @@ A list of hosts defined by the [API schema host](https://developers.redhat.com/a
       register: host
 
 
-## infra_env_info
+### infra_env_info
 
 Cluster info is a module that seeks to implement the following endpoints from the Red Hat Assisted Installer
 
@@ -107,14 +110,14 @@ Cluster info is a module that seeks to implement the following endpoints from th
 | GET      | `/v2/infra-envs/{infra_env_id}` | None | Retrieves the details of the infra-env. |
 
 
-### Arguments
+#### Arguments
 
 | Name          | Description               | Type      | Default       | Choices               | Required | 
 | ------------- | ------------------------- | --------- | ------------- | --------------------- | -------- |
 | infra_env_id  | ID for the assisted installer managed infrastructure environment |  str | None | any | False |
 
 
-### Returns
+#### Returns
 
 A list of `infra_env` defined by the [API schema infra_env](https://developers.redhat.com/api-catalog/api/assisted-install-service#schema-infra-env)
 
