@@ -1,7 +1,64 @@
-import re
-
+import re, jmespath, base64, textwrap, json
 from ..module_utils.schema.cluster import *
 from ..module_utils.schema.infra_env import *
+from collections.abc import Mapping, Iterable
+
+
+def is_base64(base64_content: str):
+    # Define the regular expression for valid base64 characters
+    base64_pattern = re.compile(r'^[A-Za-z0-9+/=\n]+$')
+    
+    # Validate the base64 content
+    if not base64_pattern.match(base64_content):
+        return False
+    
+    return True
+
+def is_pem_format(cert_string: str):
+    # Define the PEM format header and footer
+    pem_header = "-----BEGIN CERTIFICATE-----"
+    pem_footer = "-----END CERTIFICATE-----"
+    
+    # Check if the certificate contains the header and footer
+    if not cert_string.startswith(pem_header):
+        return False
+    if not cert_string.endswith(pem_footer):
+        return False
+    
+    # Extract the base64 encoded content between the header and footer
+    base64_content = cert_string[len(pem_header):-len(pem_footer)].strip()
+
+    return is_base64(base64_content)
+
+def deep_equal(val1, val2):
+    """
+    Recursively check for equality between two complex data structures.
+    """
+    if isinstance(val1, Mapping) and isinstance(val2, Mapping):
+        return (val1.keys() == val2.keys() and 
+                all(deep_equal(val1[k], val2[k]) for k in val1))
+    elif isinstance(val1, Iterable) and isinstance(val2, Iterable) and not isinstance(val1, (str, bytes)):
+        return all(deep_equal(v1, v2) for v1, v2 in zip(val1, val2))
+    else:
+        return val1 == val2
+
+def remove_matching_pairs(dict1, dict2):
+    """
+    Removes key-value pairs from dict1 if they match in both dictionaries, handling complex structures.
+    
+    Args:
+    dict1 (dict): The first dictionary to be modified.
+    dict2 (dict): The second dictionary to compare against.
+
+    Returns:
+    dict: The modified dict1.
+    """
+    keys_to_remove = [key for key in dict1 if key in dict2 and deep_equal(dict1[key], dict2[key])]
+
+    for key in keys_to_remove:
+        del dict1[key]
+
+    return dict1
 
 def filter_dict_by_keys(data, valid_keys):
     """
@@ -15,6 +72,38 @@ def filter_dict_by_keys(data, valid_keys):
     dict: A new dictionary with only the valid keys.
     """
     return {key: value for key, value in data.items() if key in valid_keys}
+
+
+def jmespath_name_validator(name: str, data: list):
+    """
+    Filters lists of objects and returns a list of objects where []data.name == name
+    Parameters:
+    name (str): Name to filter json list 
+    data (list): The list of objects returned from api request
+
+    Returns:
+    dict: A new dictionary with only the valid keys.
+    """
+    # JMESPath expression to filter objects by name
+    expression = f"[?name=='{name}']"
+    # Search the API response using the JMESPath expression
+    return jmespath.search(expression, data)
+
+def jmespath_id_validator(id: str, data: list):
+    """
+    Filters lists of objects and returns a list of objects where []data.id == id
+
+    Parameters:
+    id (str): The dictionary to filter.
+    data (list): The list of objects returned from api request
+
+    Returns:
+    dict: A new dictionary with only the valid keys.
+    """
+    # JMESPath expression to filter objects by id
+    expression = f"[?id=='{id}']"
+    # Search the API response using the JMESPath expression
+    return jmespath.search(expression, data)
 
 
 def is_valid_http_proxy(proxy: str) -> bool:
@@ -258,3 +347,5 @@ def create_static_network_config_from_module_params(module_params: list) -> list
         ))
     return network_configs
     
+
+

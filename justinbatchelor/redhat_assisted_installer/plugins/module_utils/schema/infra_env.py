@@ -206,7 +206,7 @@ class KernelArgument(APIObject):
 
         if value is not None:
             self.params['value'] = value
-    
+
 
 class InfraEnv(APIObject):
     def __init__(self,

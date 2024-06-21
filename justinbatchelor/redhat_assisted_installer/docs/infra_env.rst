@@ -1,6 +1,6 @@
 ======================================================
-justinbatchelor.redhat_assisted_installer.host_info
+justinbatchelor.redhat_assisted_installer.infra_env
 ======================================================
 
-Get cluster information from Red Hat Assisted Installer API
+Get infrastructure  information from Red Hat Assisted Installer API
 -----------------------------------------------------------
