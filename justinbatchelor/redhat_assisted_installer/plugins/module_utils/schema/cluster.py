@@ -446,7 +446,7 @@ class ServiceNetwork(APIObject):
 
 class Cluster(APIObject):
     def __init__(self, 
-                 additional_ntp_source: str = None,
+                 additional_ntp_sources: str = None,
                  api_vips: list[APIVIP] = None,
                  base_dns_domain: str = None,
                  cluster_networks: list[ClusterNetwork] = None,
@@ -477,8 +477,8 @@ class Cluster(APIObject):
                 ):
         super().__init__()
 
-        if additional_ntp_source is not None:
-            self.params['additional_ntp_source'] = additional_ntp_source
+        if additional_ntp_sources is not None:
+            self.params['additional_ntp_source'] = additional_ntp_sources
 
         if api_vips is not None:
             vips = []

@@ -315,11 +315,23 @@ msg:
 '''
 
 
+SUCCESS_GET_CODE = 200
+SUCCESS_POST_CODE = SUCCESS_PATCH_CODE = 201
+SUCCESS_DELETE_CODE = 204
 
+def format_module_results(results: dict, msg: str = None, cluster: list = None, changed: bool = None):
+    if msg is not None:
+        results['msg'] = msg
+
+    if cluster is not None:
+        results['cluster'] = cluster
+
+    if changed is not None:
+        results['changed'] = changed
 
 def run_module():
     module_args = dict(
-        additional_ntp_source=dict(type='list', required=False),
+        additional_ntp_sources=dict(type='list', required=False),
         api_vips=dict(type='list', elements='dict', required=False, options=dict(
             cluster_id=dict(type='str', required=False),
             ip=dict(type='str', required=True),
@@ -391,7 +403,7 @@ def run_module():
     result = dict(
         changed=False,
         msg='',
-        cluster='',
+        cluster=[],
     )
 
     # the AnsibleModule object will be our abstraction working with Ansible
@@ -410,183 +422,135 @@ def run_module():
     ## Now we need to check if the user provided a pull secret
     if module.params['pull_secret'] is not None:
         os.environ["REDHAT_PULL_SECRET"] = module.params["pull_secret"]
+
+    # get all clusters
+    get_cluster_response = get_clusters()
+
+    if get_cluster_response.status_code != SUCCESS_GET_CODE:
+        format_module_results(results=result,
+                              msg=f"Failed to get clusters {get_cluster_response.json()}",
+                              changed=True,
+                              cluster=[],
+                              )
+        # fail module
+        module.fail_json(**result)
+    
+    # check that a name or id was provided, fail if not
+    if module.params['cluster_id'] is None and module.params['name'] is None:
+        format_module_results(results=result,
+                              msg=f"You must specifiy either an cluster ID or a NAME when STATE == {module.params['state']}",
+                              changed=True,
+                              result=[],
+                              )
+        module.fail_json(**result)
+
+    filtered_response = jmespath_id_validator(module.params['cluster_id'], get_cluster_response.json()) if module.params['cluster_id'] is not None else jmespath_name_validator(module.params['name'], get_cluster_response.json())
+
+    # user defined a state of present
+    if module.params['state'] == "present":
+        ## First we want to create the cluster object provided the arguments from the user
+        cluster = Cluster(
+            additional_ntp_sources=create_additional_ntp_sources_from_params(module.params['additional_ntp_sources']),
+            api_vips=create_api_vips_from_module_params(module.params['api_vips']),
+            base_dns_domain=module.params['base_dns_domain'],
+            cluster_networks=create_cluster_networks_from_module_params(module.params['cluster_networks']),
+            cluster_id=module.params['cluster_id'],
+            cpu_architecture=module.params['cpu_architecture'],
+            disk_encryption=create_disk_encryption_from_module_params(module.params['disk_encryption']),
+            high_availability_mode=module.params['high_availability_mode'],
+            http_proxy=module.params['http_proxy'],
+            https_proxy=module.params['https_proxy'],
+            hyperthreading=module.params['hyperthreading'],
+            ignition_endpoint=create_ignition_endpoint_from_module_params(module.params['ignition_endpoint']),
+            ingress_vips=create_ingress_vips_from_module_params(module.params['ingress_vips']),
+            machine_networks=create_machine_networks_from_module_params(module.params['machine_networks']),
+            name=module.params['name'],
+            network_type=module.params['network_type'],
+            olm_operator=create_olm_operators_from_module_params(module.params['olm_operators']),
+            openshift_version=module.params["openshift_version"],
+            platform=create_platform_from_module_params(module.params['platform']),
+            schedulable_masters=module.params['schedulable_masters'],
+            service_networks=create_service_networks_from_module_params(module.params['service_networks']),
+            tags=module.params['tags'],
+            user_managed_networking=module.params['user_managed_networking'],
+            ssh_public_key=module.params['ssh_public_key'],
+            vip_dhcp_allocation=module.params['vip_dhcp_allocation'],
+        )
         
-    ## First we want to create the cluster object provided the arguments from the user
-    cluster_params = Cluster(
-        additional_ntp_source=create_additional_ntp_sources_from_params(module.params['additional_ntp_source']),
-        api_vips=create_api_vips_from_module_params(module.params['api_vips']),
-        base_dns_domain=module.params['base_dns_domain'],
-        cluster_networks=create_cluster_networks_from_module_params(module.params['cluster_networks']),
-        cluster_id=module.params['cluster_id'],
-        cpu_architecture=module.params['cpu_architecture'],
-        disk_encryption=create_disk_encryption_from_module_params(module.params['disk_encryption']),
-        high_availability_mode=module.params['high_availability_mode'],
-        http_proxy=module.params['http_proxy'],
-        https_proxy=module.params['https_proxy'],
-        hyperthreading=module.params['hyperthreading'],
-        ignition_endpoint=create_ignition_endpoint_from_module_params(module.params['ignition_endpoint']),
-        ingress_vips=create_ingress_vips_from_module_params(module.params['ingress_vips']),
-        machine_networks=create_machine_networks_from_module_params(module.params['machine_networks']),
-        name=module.params['name'],
-        network_type=module.params['network_type'],
-        olm_operator=create_olm_operators_from_module_params(module.params['olm_operators']),
-        openshift_version=module.params["openshift_version"],
-        platform=create_platform_from_module_params(module.params['platform']),
-        schedulable_masters=module.params['schedulable_masters'],
-        service_networks=create_service_networks_from_module_params(module.params['service_networks']),
-        tags=module.params['tags'],
-        user_managed_networking=module.params['user_managed_networking'],
-        ssh_public_key=module.params['ssh_public_key'],
-        vip_dhcp_allocation=module.params['vip_dhcp_allocation'],
-    )
-
-    # If the state is present, we will need to consider create or update
-    if module.params['state'] == 'present':
-        # If user did not specifiy either cluster_id or name we need to fail, as a name is required to create a cluster
-        if module.params["cluster_id"] is None and module.params["name"] is None:
-            # fail message
-            result['msg'] = 'When state is present you must specifiy at least a name. If a cluster does not already exist with that name, this module will create one. Please update the corresponding args and try to rerun.'
-            module.fail_json(**result)
-        """
-        handle cases
-        1. User specified both cluster_id and name
-        2. User only specified cluster_id
-        
-        We can infer that at this point that we are updating an existing cluster
-        """
-        if (module.params['cluster_id'] is not None and module.params['name'] is not None) or (module.params["cluster_id"] is not None):
-            try:
-                api_response = patch_cluster(cluster_params)
-                ## eval status code from api 
-                api_response.raise_for_status()
-                result['changed'] = True
-                result['msg'] = f"Successfully patched the cluster: {api_response.json()['id']}"
-                result['cluster'] = [api_response.json()]               
-                module.exit_json(**result)
-
-            except Exception as e:
-                result['changed'] = False
-                result['msg'] = f'Failed to patch the cluster: {api_response.json()}'
+        if len(filtered_response) == 0:
+            create_cluster_response = post_cluster(cluster=cluster)
+            if create_cluster_response.status_code != SUCCESS_POST_CODE:
+                format_module_results(results=result,
+                                      msg=f'Failed to create the cluster: {create_cluster_response.json()}',
+                                      cluster=[],
+                                      changed=False,
+                                      )
                 module.fail_json(**result)
+              
+            format_module_results(results=result,
+                                  msg=f"Successfully created the cluster: {create_cluster_response.json()['id']}",
+                                  changed=True,
+                                  cluster=[create_cluster_response.json()],
+                                  )
+            module.exit_json(**result)
 
-        """
-        handle case 
-        1. only case that remains is the user specifed a name without a cluster id
-
-        We will need to check that a cluster does not already exist with that name before we can determine if we are creating or updating a cluster
-        """
-        if module.params['cluster_id'] is None and module.params['name'] is not None:
-            try: 
-                # need to query for existing clusters and ensure that one does not already exist with that name
-                api_response = get_clusters()
-                api_response.raise_for_status()
-            except Exception as e:
-                result['changed'] = False
-                result['msg'] = f"Failed to get clusters: {api_response.json()}"
+        elif len(filtered_response) == 1:
+            modified_params = remove_matching_pairs(cluster.create_params(), filtered_response[0])
+            result['msg'] = modified_params
+            patch_cluster_response = patch_cluster(filtered_response[0]['id'], modified_params)
+            if patch_cluster_response.status_code != SUCCESS_PATCH_CODE:
+                format_module_results(results=result,
+                                      msg=f'Failed to patch the cluster: {patch_cluster_response.json()}',
+                                      cluster=[],
+                                      changed=False,
+                                      )
                 module.fail_json(**result)
-            else:
-                # JMESPath expression to filter objects by name
-                expression = f"[?name=='{module.params["name"]}']"
-
-                # Search the API response using the JMESPath expression
-                filtered_response = jmespath.search(expression, api_response.json())
-                
-                # all cluster names should be unique, fail if filtered response is greater than 1
-                if len(filtered_response) > 1:
-                    # fail for one of two reasons listed in message
-                    result['msg'] = 'We ran into a stange error. It seems you have multiple clusters with the same name, or our JMESpath expression is not working as expected.'
-                    module.fail_json(**result)
-                # now we know we are patching an existing cluster
-                if len(filtered_response) == 1:
-                    try:
-                        api_response = patch_cluster(cluster_params)
-                        api_response.raise_for_status()
-                        result['changed'] = True
-                        result['msg'] = f"Successfully patched the cluster: {api_response.json()['id']}"
-                        result['cluster'] = [api_response.json()]               
-                        module.exit_json(**result)
-
-                    except Exception as e:
-                        result['changed'] = False
-                        result['msg'] = f'Failed to patch the cluster {api_response.json()}'
-                        module.fail_json(**result)
-
-                if len(filtered_response) == 0:
-                    try: 
-                        api_response = post_cluster(cluster_params)
-                        api_response.raise_for_status()
-                        result['changed'] = True
-                        result['msg'] = f"Successfully created the cluster: {api_response.json()['id']}"
-                        result['cluster'] = [api_response.json()] 
-                        module.exit_json(**result)
-
-                    except Exception as e:
-                        result['changed'] = False
-                        result['msg'] = f'Failed to create the cluster {api_response.json()}'
-                        module.fail_json(**result)
-                
-    # Otherwise the state is absent and we will delete the cluster
-    else:
-        # In order to delete the cluster we will need the cluster_id or name at bare minimum 
-        if module.params["cluster_id"] is None and module.params["name"] is None:
-            # fail because both params are not defined
-            result['msg'] = 'You must provide either the name, cluster_id, or both to delete a cluster. Please update the corresponding args and try to rerun.'
-            module.fail_json( **result)
-        # handle cases
-        # 1. User specified both cluster_id and name
-        # 2. User only specified cluster_id
-        if (module.params['cluster_id'] is not None and module.params['name'] is not None) or (module.params["cluster_id"] is not None):
-            if delete_cluster(cluster_id=module.params['cluster_id']):
-                result['changed'] = True
-                result['msg'] = f"Successfully deleted cluster: {module.params['cluster_id']}"
-                module.exit_json(**result)
-            else:
-                result['changed'] = False
-                result['msg'] = f"Failed to delete cluster: {module.params['cluster_id']}\nAPI call returned a bad status code"
-                module.fail_json(**result)
-        # handle the case where user specified name only
-        else:
-            try: 
-                # need to query for existing clusters and ensure that one does not already exist with that name
-                api_response = get_clusters()
-                api_response.raise_for_status()
-            except Exception as e:
-                result['changed'] = False
-                result['msg'] = f"Failed to get clusters {api_response.json()}"
-                module.fail_json(**result)
-            else:
-                # JMESPath expression to filter objects by name
-                expression = f"[?name=='{module.params["name"]}']"
-
-                # Search the API response using the JMESPath expression
-                filtered_response = jmespath.search(expression, api_response.json())
-
-                # all cluster names should be unique, fail if filtered response is greater than 1
-                if len(filtered_response) > 1:
-                    # fail for one of two reasons listed in message
-                    result['msg'] = 'We ran into a stange error. It seems you have multiple clusters with the same name, or our JMESpath expression is not working as expected.'
-                    module.fail_json(**result)
-                # now we know we are patching an existing cluster
-                if len(filtered_response) == 1:
-                    if delete_cluster(cluster_id=filtered_response[0]['id']):
-                        result['changed'] = True
-                        result['msg'] = f"Successfully deleted cluster: {filtered_response[0]['id']}"
-                        module.exit_json(**result)
-                    else:
-                        result['changed'] = False
-                        result['msg'] = f"Failed to delete cluster: {module.params['cluster_id']}\nAPI call returned a bad status code"
-                        module.fail_json(**result)                 
-
+            format_module_results(results=result,
+                                  msg=f"Successfully patched the cluster: {patch_cluster_response.json()['id']}",
+                                  changed=True,
+                                  cluster=[patch_cluster_response.json()],
+                                  )
+            module.exit_json(**result)
             
+        else:
+           format_module_results(results=result,
+                                 msg="Found more than one instance of the cluster you defined",
+                                 changed=False,
+                                 cluster=[])
+           module.fail_json(**result)
+    # otherwise the state is absent
+    else:     
+        if len(filtered_response) == 0:
+          format_module_results(results=result,
+                                msg="cluster not found.",
+                                changed=False,
+                                cluster=[])
+          module.exit_json(**result)
 
-    # during the execution of the module, if there is an exception or a
-    # conditional state that effectively causes a failure, run
-    # AnsibleModule.fail_json() to pass in the message and the result
-    # if module.params['name'] == 'fail me':
-    #     module.fail_json(msg='You requested this to fail', **result)
+        elif len(filtered_response) == 1:
+            if delete_cluster(cluster_id=filtered_response[0]['id']):
+                format_module_results(results=result, 
+                                      msg=result['msg'] + f"Successfully deleted cluster: {filtered_response[0]['id']}\n",
+                                      changed=True,
+                                      cluster=result['cluster'].append(filtered_response[0]),
+                                      )
+                module.exit_json(**result)
+            else: 
+                format_module_results(results=result, 
+                                      msg=result['msg'] + f"Failed to delete cluster: {filtered_response[0]['id']}\n",
+                                      changed=False,
+                                      cluster=result['cluster'].append(filtered_response[0]),
+                                      )
+                module.fail_json(**result)
+        else:
+            # fail for one of two reasons listed in message
+            format_module_results(results=result, 
+                                  msg='We ran into a stange error. It seems you have multiple clusters with the same name, or our JMESpath expression is not working as expected.',
+                                  changed=False,
+                                  cluster=[],
+                                  )
+            module.fail_json(**result)
 
-    # in the event of a successful module execution, you will want to
-    # simple AnsibleModule.exit_json(), passing the key/value results
     module.exit_json(**result)
 
 

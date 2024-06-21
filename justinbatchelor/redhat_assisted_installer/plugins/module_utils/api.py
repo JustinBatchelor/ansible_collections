@@ -90,7 +90,7 @@ def post_cluster(cluster: Cluster) -> requests.Response:
  
     return response
 
-def patch_cluster(cluster: Cluster) -> requests.Response:
+def patch_cluster(cluster_id: str, cluster: dict) -> requests.Response:
     VALID_PATCH_PARAMS = [
         "additional_ntp_source","api_vips","base_dns_domain","cluster_network_cidr",
         "cluster_network_host_prefix","cluster_networks","disk_encryption","http_proxy","https_proxy","hyperthreading",
@@ -99,19 +99,9 @@ def patch_cluster(cluster: Cluster) -> requests.Response:
         "ssh_public_key","tags","user_managed_networking","vip_dhcp_allocation",
         ]
     
-    cluster_params = cluster.create_params()
-
-    cluster_id = cluster_params.pop("cluster_id", None)
-
-    if cluster_id is None:
-        response = requests.Response()
-        response._content = b'{"message": "cluster_id is requried to preform the patch operation"}'
-        response.status_code = 404
-        return response
-    
-    cluster_params = filter_dict_by_keys(cluster_params, VALID_PATCH_PARAMS)
-    
     url = API_BASE + f"clusters/{cluster_id}"
+    
+    cluster_params = filter_dict_by_keys(cluster, VALID_PATCH_PARAMS)
 
     response = requests.patch(url, headers=__get_headers(), json=cluster_params)
  
@@ -138,17 +128,17 @@ def get_infrastructure_environements() -> requests.Response:
     return response
 
     
-def patch_infrastructure_environment(infra_env_id: str, data: dict) -> requests.Response:
+def patch_infrastructure_environment(infra_env_id: str, infra_env: dict) -> requests.Response:
     VALID_PATCH_PARAMS =  [
         "additional_ntp_sources","additional_trust_bundle","ignition_config_override","image_type",
         "kernel_arguments","proxy","pull_secret","ssh_authorized_key","static_network_config",
         ]
     
-    infra_params = filter_dict_by_keys(data, VALID_PATCH_PARAMS)
-    
     url = API_BASE + f"infra-envs/{infra_env_id}"
 
-    response = requests.patch(url, headers=__get_headers(), json=infra_params)
+    infra_env_params = filter_dict_by_keys(infra_env, VALID_PATCH_PARAMS)
+
+    response = requests.patch(url, headers=__get_headers(), json=infra_env_params)
  
     return response
 

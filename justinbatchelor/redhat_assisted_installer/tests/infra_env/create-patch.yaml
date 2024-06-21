@@ -114,8 +114,8 @@
       ansible.builtin.debug:
         msg: "{{ infra_env }}"
 
-    # - name: Delete a fully configured infra-env
-    #   justinbatchelor.redhat_assisted_installer.infra_env:
-    #     state: absent
-    #     infra_env_id: "{{ infra_env['infra_env'][0]['id'] }}"
+    - name: Delete a fully configured infra-env
+      justinbatchelor.redhat_assisted_installer.infra_env:
+        state: absent
+        infra_env_id: "{{ infra_env['infra_env'][0]['id'] }}"
 

@@ -4,7 +4,7 @@
     - name: Create a fully configured OpenShift cluster
       justinbatchelor.redhat_assisted_installer.cluster:
         name: "pypi-testing"
-        additional_ntp_source:
+        additional_ntp_sources:
           - "time.nist.gov"
           - "us.pool.ntp.org"
         api_vips:
@@ -59,19 +59,15 @@
       justinbatchelor.redhat_assisted_installer.cluster:
         name: "pypi-testing"
         cluster_id: "{{ cluster['cluster'][0]['id'] }}"
-        additional_ntp_source:
+        additional_ntp_sources:
           - "time.nist.gov"
+          - "ntp1.example.com"
         base_dns_domain: "batchelor.live"
         olm_operators:
           - name: "certified-operators"
           - name: "community-operators"
         hyperthreading: "all"
-        # ignition_endpoint:
-        #   ca_certificate: "{{ lookup('file', 'path/to/ca.pem') }}"
-        #   url: "https://ignition.example.com/config"
-        # pull_secret: "{{ lookup('file', 'path/to/pull-secret.json') }}"
         tags: "production,openshift"
-        # ssh_public_key: "{{ lookup('file', 'path/to/ssh_public_key.pub') }}"
         state: "present"
       register: cluster
 

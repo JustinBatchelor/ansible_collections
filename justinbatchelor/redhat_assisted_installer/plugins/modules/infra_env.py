@@ -122,8 +122,6 @@ def run_module():
     result = dict(
         changed=False,
         infra_env=[],
-        infra_env_patch_args='',
-        returned='',
         msg='',
     )
 
@@ -221,7 +219,6 @@ def run_module():
                                   changed=True,
                                   infra_env=[patch_infra_response.json()],
                                   )
-            result['infra_env_patch_args'] = modified_params
             module.exit_json(**result)
             
         else:

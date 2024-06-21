@@ -4,7 +4,7 @@
     - name: Create a fully configured OpenShift cluster
       justinbatchelor.redhat_assisted_installer.cluster:
         name: "pypi-testing"
-        additional_ntp_source:
+        additional_ntp_sources:
           - "time.nist.gov"
           - "us.pool.ntp.org"
         api_vips:
