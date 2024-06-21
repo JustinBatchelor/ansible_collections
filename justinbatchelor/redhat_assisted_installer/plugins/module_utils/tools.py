@@ -197,27 +197,27 @@ def create_additional_ntp_sources_from_params(module_params: list) -> str:
         additional_ntp_sources += (source + ',')
     return additional_ntp_sources[:-1]
 
-def create_api_vips_from_module_params(module_params: list) -> list[APIVIP]:
+def create_api_vips_from_module_params(module_params: list[dict]) -> list[APIVIP]:
     if module_params is None:
         return None
     api_vips = []
     for api_vip in module_params:
         api_vips.append(APIVIP(
-            cluster_id=api_vip['cluster_id'] if "cluster_id" in api_vip else None,
-            ip=api_vip['ip'],
-            verification=api_vip['verification'] if "verification" in api_vip else None,
+            cluster_id=api_vip.get('cluster_id', None),
+            ip=api_vip.get('ip', None),
+            verification=api_vip.get('verification', None),
         ))
     return api_vips
 
-def create_cluster_networks_from_module_params(module_params: list) -> list[ClusterNetwork]:
+def create_cluster_networks_from_module_params(module_params: list[dict]) -> list[ClusterNetwork]:
     if module_params is None:
         return None
     cluster_networks = []
     for cluster_network in module_params:
         cluster_networks.append(ClusterNetwork(
-            cidr=cluster_network['cidr'],
-            cluster_id=cluster_network['cluster_id'] if "cluster_id" in cluster_network else None,
-            host_prefix=cluster_network['host_prefix'] if "host_prefix" in cluster_network else None,
+            cidr=cluster_network.get('cidr', None),
+            cluster_id=cluster_network.get('cluster_id', None),
+            host_prefix=cluster_network.get('host_prefix', None),
         ))
     return cluster_networks
         
@@ -225,83 +225,89 @@ def create_disk_encryption_from_module_params(module_params: dict) -> DiskEncryp
     if module_params is None:
         return None
     return DiskEncryption(
-        enable_on=module_params['enable_on'],
-        mode=module_params['mode'],
-        tang_server=module_params['tang_server'] if "tang_server" in module_params else None,
+        enable_on=module_params.get('enable_on', None),
+        mode=module_params.get('mode', None),
+        tang_server=module_params.get('tang_server', None),
     )
 
 def create_disk_encryption_from_module_params(module_params: dict) -> DiskEncryption:
     if module_params is None:
         return None
     return DiskEncryption(
-        enable_on=module_params['enable_on'],
-        mode=module_params['mode'],
-        tang_server=module_params['tang_server'],
+        enable_on=module_params.get('enable_on', None),
+        mode=module_params.get('mode', None),
+        tang_server=module_params.get('tang_server', None),
     )
 
 def create_ignition_endpoint_from_module_params(module_params: dict) -> IgnitionEndpoint:
     if module_params is None:
         return None
     return IgnitionEndpoint(
-        ca_certificate=module_params['ca_certificate'],
-        url=module_params['url'],
+        ca_certificate=module_params.get('ca_certificate', None),
+        url=module_params.get('url', None),
     )
 
-def create_ingress_vips_from_module_params(module_params: list) -> list[IngressVIP]:
+def create_ingress_vips_from_module_params(module_params: list[dict]) -> list[IngressVIP]:
     if module_params is None:
         return None
     ingress_vips = []
     for ingress_vip in module_params:
         ingress_vips.append(IngressVIP(
-            ip=ingress_vip['ip'],
-            cluster_id=ingress_vip['cluster_id'] if "cluster_id" in ingress_vip else None,
-            verification=ingress_vip['verification'] if "verification" in ingress_vip else None,
+            ip=ingress_vip.get('ip', None),
+            cluster_id=ingress_vip.get('cluster_id', None),
+            verification=ingress_vip.get('verification', None),
         ))
     return ingress_vips
 
 
-def create_machine_networks_from_module_params(module_params: list) -> list[MachineNetwork]:
+def create_machine_networks_from_module_params(module_params: list[dict]) -> list[MachineNetwork]:
     if module_params is None:
         return None
     machine_networks = []
     for machine_network in module_params:
         machine_networks.append(MachineNetwork(
-            cidr=machine_network['cidr'],
-            cluster_id=machine_network['cluster_id'] if "cluster_id" in machine_network else None,
+            cidr=machine_network.get('cidr', None),
+            cluster_id=machine_network.get('cluster_id', None),
         ))
     return machine_networks
 
-def create_olm_operators_from_module_params(module_params: list) -> list[OLMOperator]:
+def create_olm_operators_from_module_params(module_params: list[dict]) -> list[OLMOperator]:
     if module_params is None:
         return None
     olm_operators = []
     for olm_operator in module_params:
         olm_operators.append(OLMOperator(
-            name=olm_operator['name'],
-            properties=olm_operator['properties'] if "properties" in olm_operator else None,
+            name=olm_operator.get('name', None),
+            properties=olm_operator.get("properties", None),
         ))
     return olm_operators
+
+def create_platform_external_from_module_params(module_params: dict) -> PlatformExternal:
+    if module_params is None:
+        return None
+
+    return PlatformExternal(
+        cloud_controller_manager=module_params.get('cloud_controller_manager', None),
+        platform_name=module_params.get("platform_name", None),
+        )
 
 def create_platform_from_module_params(module_params: dict) -> Platform:
     if module_params is None:
         return None
-    platform_external = PlatformExternal(
-        cloud_controller_manager=module_params['external']['cloud_controller_manager'],
-        platform_name=module_params['external']['platform_name'],
-        )
+    
     return Platform(
-        external=platform_external,
-        type=module_params['type']
+        external=create_platform_external_from_module_params(module_params.get("external", None)),
+        type=module_params.get("type", None),
     )
 
-def create_service_networks_from_module_params(module_params: list) -> list[ServiceNetwork]:
+def create_service_networks_from_module_params(module_params: list[dict]) -> list[ServiceNetwork]:
     if module_params is None:
         return None
     service_networks = []
     for service_network in module_params:
         service_networks.append(ServiceNetwork(
-            cidr=service_network['cidr'],
-            cluster_id=service_network['cluster_id'] if "cluster_id" in service_network else None,
+            cidr=service_network.get('cidr', None),
+            cluster_id=service_network.get('cluster_id', None),
         ))
     return service_networks
 
@@ -310,24 +316,24 @@ def create_proxy_from_module_params(module_params: dict) -> Proxy:
     if module_params is None or (module_params.get("http_proxy", None) is None and module_params.get("https_proxy") is None and module_params.get("no_proxy") is None):
         return None
     return Proxy(
-        http_proxy=module_params['http_proxy'],
-        https_proxy=module_params['https_proxy'],
-        no_proxy=module_params['no_proxy'],
+        http_proxy=module_params.get('http_proxy', None),
+        https_proxy=module_params.get('https_proxy', None),
+        no_proxy=module_params.get('no_proxy', None),
     )
 
-def create_kernel_arguments_from_module_params(module_params: list) -> list[KernelArgument]:
+def create_kernel_arguments_from_module_params(module_params: list[dict]) -> list[KernelArgument]:
     if module_params is None:
         return None
     kernel_arguments = []
     for kernel_argument in module_params:
         kernel_arguments.append(KernelArgument(
-            operation=kernel_argument['operation'],
-            value=kernel_argument['value'],
+            operation=kernel_argument.get('operation', None),
+            value=kernel_argument.get('value', None),
         ))
     return kernel_arguments
 
 
-def create_static_network_config_from_module_params(module_params: list) -> list[StaticNetworkConfig]:
+def create_static_network_config_from_module_params(module_params: list[dict]) -> list[StaticNetworkConfig]:
     if module_params is None:
         return None
     network_configs = []
@@ -335,15 +341,15 @@ def create_static_network_config_from_module_params(module_params: list) -> list
     for network_config in module_params:
         # create an array of mac_interfaces
         mac_interfaces = []
-        for mac_interface in network_config['mac_interface_map']:
+        for mac_interface in network_config.get('mac_interface_map', None):
             mac_interfaces.append(MacInterfaceMap(
-                logical_nic_name=mac_interface['logical_nic_name'],
-                mac_address=mac_interface['mac_address'],
+                logical_nic_name=mac_interface.get('logical_nic_name', None),
+                mac_address=mac_interface.get('mac_address', None),
             ))
 
         network_configs.append(StaticNetworkConfig(
             mac_interface_map=mac_interfaces,
-            network_yaml=network_config['network_yaml'],
+            network_yaml=network_config.get('network_yaml', None),
         ))
     return network_configs
     

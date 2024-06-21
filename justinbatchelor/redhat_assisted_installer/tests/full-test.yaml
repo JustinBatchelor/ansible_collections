@@ -1,0 +1,46 @@
+- name: Manage OpenShift Cluster
+  hosts: localhost
+  tasks:
+    - name: Task to set facts to create Single Node OpenShift cluster
+      ansible.builtin.set_fact:
+        cluster_name: "ansible-testing-cluster"
+        infra_name: "ansible-testing-infra"
+        base_dns_domain: "batchelor.live"
+        openshift_version: "4.15"
+        cpu_architecture: "x86_64"
+        high_availability_mode: "Full"
+        cluster_tags: "sno,openshift"
+        platform_type: "baremetal"
+        image_type: "minimal-iso"
+
+    - name: Create a Single Node OpenShift cluster
+      justinbatchelor.redhat_assisted_installer.cluster:
+        name: "{{ cluster_name }}"
+        base_dns_domain: "{{ base_dns_domain }}"
+        openshift_version: "{{ openshift_version }}"
+        cpu_architecture: "{{ cpu_architecture }}"
+        high_availability_mode: "{{ high_availability_mode }}"
+        platform:
+          type: "{{ platform_type }}"
+        tags: "{{ cluster_tags }}"
+        ssh_public_key: "{{ lookup('file', '/home/jbatchel/.ssh/id_rsa.pub') }}"
+        state: "present"
+      register: cluster
+
+    - name: Task to debug cluster
+      ansible.builtin.debug:
+        msg: "{{ cluster['cluster'] }}"
+
+    - name: Create an infrastructure environment associated with cluster
+      justinbatchelor.redhat_assisted_installer.infra_env:
+        name: "{{ infra_name }}"
+        state: "present"
+        cluster_id: "{{ cluster['cluster'][0]['id'] }}"
+        cpu_architecture: "{{ cpu_architecture }}"
+        openshift_version: "{{ openshift_version }}"
+        image_type: "{{ image_type }}"
+      register: infra_env
+
+    - name: Task to debug infrastructure environment
+      ansible.builtin.debug:
+        msg: "{{ infra_env }}"

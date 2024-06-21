@@ -83,8 +83,3 @@
     - name: Debug info module patched cluster
       ansible.builtin.debug:
         msg: "{{ cluster_info['cluster_info'] }}"
-
-    - name: Delete cluster
-      justinbatchelor.redhat_assisted_installer.cluster:
-        state: absent
-        cluster_id: "{{ cluster['cluster'][0]['id'] }}"
