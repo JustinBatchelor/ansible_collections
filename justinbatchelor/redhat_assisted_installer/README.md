@@ -74,19 +74,19 @@ To learn more about how to use a specific module, please refer to the `docs/` fo
 
 #### Info Modules
 
-Implements GET API methods
+Implements GET API operations
 
-- `justinbatchelor.redhat_assisted_installer.cluster_info`
-- `justinbatchelor.redhat_assisted_installer.host_info`
-- `justinbatchelor.redhat_assisted_installer.infra_env_info`
-
+- [justinbatchelor.redhat_assisted_installer.cluster_info](docs/cluster_info.md)
+- [justinbatchelor.redhat_assisted_installer.host_info](docs/host_info.md)
+- [justinbatchelor.redhat_assisted_installer.infra_env_info](docs/infra_env_info.md)
 
 #### Create / Update / Delete
 
-Implements the POST / PATCH / DELETE API methods
+Implements the POST / PATCH / DELETE API operations
 
-- `justinbatchelor.redhat_assisted_installer.cluster`
-- `justinbatchelor.redhat_assisted_installer.infra_env`
+- [justinbatchelor.redhat_assisted_installer.cluster](docs/cluster.md)
+
+- [justinbatchelor.redhat_assisted_installer.infra_env](docs/infra_env.md)
 
 
 ### Use Case Example 
