@@ -106,7 +106,7 @@ The result of the playbook will create (or patch) a cluster and infrastructure e
         base_dns_domain: "batchelor.live"
         openshift_version: "4.15"
         cpu_architecture: "x86_64"
-        high_availability_mode: "No"
+        high_availability_mode: "None"
         cluster_tags: "sno,openshift"
         platform_type: "baremetal"
         image_type: "minimal-iso"
