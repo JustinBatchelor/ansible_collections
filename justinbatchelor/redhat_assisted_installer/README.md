@@ -85,7 +85,6 @@ Implements GET API operations
 Implements the POST / PATCH / DELETE API operations
 
 - [justinbatchelor.redhat_assisted_installer.cluster](docs/cluster.md)
-
 - [justinbatchelor.redhat_assisted_installer.infra_env](docs/infra_env.md)
 
 
