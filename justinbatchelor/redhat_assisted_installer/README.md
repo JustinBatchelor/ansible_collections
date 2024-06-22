@@ -95,12 +95,21 @@ Implements the POST / PATCH / DELETE API methods
 
 The result of the playbook will create (or patch) a cluster and infrastructure environment in your hybrid cloud Red Hat account. Thus allowing you access to an `iso` file that you can use to boot machines backing your openshift cluster. You can access this iso file by navigating to your hybrid cloud account and click on the newly created cluster, then click the button `Add hosts` to generate your discovery iso. Optionally, the last debug task will contain a json response with a key named "download_url" containing the url you use to obtain your `iso` file.
 
+
+**New Cluster Object**
+
 ![](docs/pics/new-cluster.png)
 
+**New Infrastructure Environment**
 
 ![](docs/pics/add-host.png)
 
+
+**Generate ISO Download**
+
 ![](docs/pics/generate-iso.png)
+
+**Ansible Playbook to recreate steps**
 
 ```
 - name: Manage OpenShift Cluster
