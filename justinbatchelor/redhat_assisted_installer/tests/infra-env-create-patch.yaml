@@ -21,24 +21,6 @@
           - "ntp1.example.com"
           - "ntp2.example.com"
           - "ntp3.example.com"
-        # additional_trust_bundle: |-
-        #   -----BEGIN CERTIFICATE-----
-        #   MIIC4jCCAcqgAwIBAgIJAOlWvquLXsm7MA0GCSqGSIb3DQEBCwUAMBMxETAPBgNV
-        #   BAMMCHRlc3RjZXJ0MB4XDTE5MTAyMjA4NDQwM1oXDTI5MTAxOTA4NDQwM1owEzER
-        #   MA8GA1UEAwwIdGVzdGNlcnQwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
-        #   AQDHY1UNy2m7Rf2+f8S2FJcGmU2A2V63RPdbzg0QITyLjW2vWq5+Oh4AsLJ3PmWB
-        #   TIOuLQ/zE7BZRCLJpDXT74tHcKNiB+/rP6mr/N+aTboHB8cYQ6N4VnYl/b+U5ak7
-        #   q2cthdY6hxIYDOFf1Ed1QDQ1uQw3OsQmfLFP7rsly7PGLAI4yfu/2rQF/BmUMUMx
-        #   0N5+84DdA1P1Y2WJ1o4oizp7WzSFM0gCQzyOl/sx4Gjz4SIEksy8VGvXZdT8UTJ4
-        #   jFXFlJlqvB4bDgEkS4CmDqTi2yU7s+Y3ydu4ct6NeCIhXoM7Bl0NzjWeBQy9EkaT
-        #   BcqE5l5MZlMD/yfXHlL5J7/JAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAL8c8Ej/
-        #   F3qkP8B//sl1/wgMhStx25WTvlA7hsHoDNG+ev5a0IXmA3Jc8CxA4I6U/eI1a7Zc
-        #   lrgXLgO2Us/CyS/3Z8G9zWSD85kkEs87enxYBt7+yEDMlv7kTDmrzFnWh0VWUEvk
-        #   kO+O3rxSBix7iyw1eItMToC9D78yW+Y6YIwhuNNiFMmEoE1Hci+Ry5Xn6GPmF1xF
-        #   YMIW1L5FZnNArG8h7GoFLcB2ykwLq3DYuFuNdP1ouo6W8Z4QYRXwIXV5iVkXpg8m
-        #   1F1Z6/AcBv3SGXyt5TjXn2LfFyfZj0mP4+4x4QFZ84m4ZYPqJpIEiqotX0Bcvwl5
-        #   P8Y9IMQ3W8FlXjbzzpc=
-        #   -----END CERTIFICATE-----
         cpu_architecture: "x86_64"
         ignition_config_override: |
           {

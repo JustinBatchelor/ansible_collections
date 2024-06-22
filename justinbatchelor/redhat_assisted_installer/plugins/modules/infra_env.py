@@ -13,40 +13,161 @@ __metaclass__ = type
 
 DOCUMENTATION = r'''
 ---
-
-
+module: infra_env
+short_description: Manage infrastructure environments with Red Hat Assisted Installer
+description:
+  - Create, update, and delete infrastructure environments using the Red Hat Assisted Installer.
+  - This module interacts with the Red Hat Assisted Installer API.
+version_added: "1.0.0"
 requirements:
   - requests==2.32.3
   - ansible==10.1.0
   - jmespath==1.0.1
-
 author:
   - Justin Batchelor (@justinbatchelor)
+options:
+  additional_ntp_sources:
+    description: List of additional NTP sources.
+    required: false
+    type: list
+  additional_trust_bundle:
+    description: Additional trust bundle in PEM format.
+    required: false
+    type: str
+  cluster_id:
+    description: Cluster ID associated with the infrastructure environment.
+    required: false
+    type: str
+  cpu_architecture:
+    description: CPU architecture of the infrastructure environment.
+    required: false
+    type: str
+    choices: ['x86_64', 'aarch64', 'arm64', 'ppc64le', 's390x']
+  ignition_config_override:
+    description: Ignition config override.
+    required: false
+    type: str
+  image_type:
+    description: Type of image to create.
+    required: false
+    type: str
+    choices: ["full-iso", "minimal-iso"]
+  infra_env_id:
+    description: ID of the infrastructure environment.
+    required: false
+    type: str
+  kernel_arguments:
+    description: Kernel arguments for the infrastructure environment.
+    required: false
+    type: list
+    elements: dict
+    suboptions:
+      operation:
+        description: Operation to perform on the kernel arguments.
+        required: true
+        type: str
+        choices: ["append", "replace", "delete"]
+      value:
+        description: Kernel argument value.
+        required: true
+        type: str
+  name:
+    description: Name of the infrastructure environment.
+    required: false
+    type: str
+  offline_token:
+    description: Offline token for authentication.
+    required: false
+    type: str
+    no_log: true
+  openshift_version:
+    description: OpenShift version to use.
+    required: false
+    type: str
+  proxy:
+    description: Proxy configuration.
+    required: false
+    type: dict
+    suboptions:
+      http_proxy:
+        description: HTTP proxy URL.
+        required: false
+        type: str
+      https_proxy:
+        description: HTTPS proxy URL.
+        required: false
+        type: str
+      no_proxy:
+        description: Comma-separated list of hosts that do not use the proxy.
+        required: false
+        type: str
+  pull_secret:
+    description: Pull secret for accessing Red Hat's image registry.
+    required: false
+    type: str
+    no_log: true
+  ssh_authorized_key:
+    description: SSH public key to authorize.
+    required: false
+    type: str
+  state:
+    description: Desired state of the infrastructure environment.
+    required: true
+    type: str
+    choices: ['present', 'absent']
+  static_network_config:
+    description: Static network configuration.
+    required: false
+    type: list
+    elements: dict
+    suboptions:
+      mac_interface_map:
+        description: Mapping of MAC addresses to network interfaces.
+        required: true
+        type: list
+        elements: dict
+        suboptions:
+          logical_nic_name:
+            description: Logical name of the network interface.
+            required: true
+            type: str
+          mac_address:
+            description: MAC address of the network interface.
+            required: true
+            type: str
+      network_yaml:
+        description: Network configuration in YAML format.
+        required: true
+        type: str
 '''
 
 EXAMPLES = r'''
 # Create a new infrastructure environment
 - name: Create a new infrastructure environment
-  justinbatchelor.redhat_assisted_installer.infra_env:
+  infra_env:
     state: present
     name: "my-new-infra-env"
     openshift_version: "4.8"
     pull_secret: "{{ lookup('file', 'path/to/pull-secret.txt') }}"
-    ssh_public_key: "{{ lookup('file', 'path/to/ssh-key.pub') }}"
+    offline_token: <offline-token>
+    ssh_authorized_key: "{{ lookup('file', 'path/to/ssh-key.pub') }}"
   register: result
 
-- debug:
-    msg: "{{ result }}"
-
-# Delete an existing infrastructure environment
+# Delete an existing infrastructure environment by id
 - name: Delete an infrastructure environment
-  justinbatchelor.redhat_assisted_installer.infra_env:
+  infra_env:
     state: absent
     infra_env_id: "your-infra-env-id"
   register: result
 
-- debug:
-    msg: "{{ result }}"
+  
+# Delete an existing infrastructure environment by id
+- name: Delete an infrastructure environment
+  infra_env:
+    state: absent
+    infra_env_id: "your-infra-env-id"
+  register: result
+
 '''
 
 RETURN = r'''
@@ -66,7 +187,14 @@ msg:
   returned: always
   type: str
   sample: "Successfully created the infrastructure environment."
+changed:
+  description: >
+    Indicates if any change was made.
+  returned: always
+  type: bool
+  sample: true
 '''
+
 SUCCESS_GET_CODE = 200
 SUCCESS_POST_CODE = SUCCESS_PATCH_CODE = 201
 SUCCESS_DELETE_CODE = 204

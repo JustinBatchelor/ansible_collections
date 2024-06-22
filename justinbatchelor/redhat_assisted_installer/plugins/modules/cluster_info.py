@@ -35,17 +35,12 @@ EXAMPLES = r'''
   justinbatchelor.redhat_assisted_installer.cluster_info:
   register: all_cluster_info
 
-- debug:
-    msg: "{{ all_cluster_info }}"
-
 # Retrieve information about a specific cluster
 - name: Get information about a specific cluster
   justinbatchelor.redhat_assisted_installer.cluster_info:
     cluster_id: '{{ all_cluster_info["cluster_info"][0]["id"] }}'
   register: cluster_info
 
-- debug:
-    msg: "{{ cluster_info['cluster_info'][0] }}"
 '''
 
 RETURN = r'''
@@ -77,6 +72,9 @@ def run_module():
     # define available arguments/parameters a user can pass to the module
     module_args = dict(
         cluster_id = dict(type='str', default=None),
+        offline_token=dict(type='str', required=False, no_log=True),
+        pull_secret=dict(type='str', required=False, no_log=True),
+
     )
 
     # seed the result dict in the object
@@ -106,6 +104,14 @@ def run_module():
     # state with no modifications
     if module.check_mode:
         module.exit_json(**result)
+
+    ## First we need to check if the user provided an offline token 
+    if module.params['offline_token'] is not None:
+        os.environ["REDHAT_OFFLINE_TOKEN"] = module.params["offline_token"]
+
+    ## Now we need to check if the user provided a pull secret
+    if module.params['pull_secret'] is not None:
+        os.environ["REDHAT_PULL_SECRET"] = module.params["pull_secret"]
 
     try:
         api_response = None
