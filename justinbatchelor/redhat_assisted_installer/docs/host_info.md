@@ -1,7 +1,9 @@
 # justinbatchelor.redhat_assisted_installer.host_info
 
+Module to implement the GET operations for OpenShift host objects documented by the [Red Hat Assisted Installer API](https://developers.redhat.com/api-catalog/api/assisted-install-service#content-operations)
 
-## Example
+
+## Examples
 
 ```
 ---

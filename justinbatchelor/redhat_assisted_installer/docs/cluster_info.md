@@ -1,5 +1,6 @@
 # justinbatchelor.redhat_assisted_installer.module 
 
+Module to implement the GET operations for cluster objects documented by the [Red Hat Assisted Installer API](https://developers.redhat.com/api-catalog/api/assisted-install-service#content-operations)
 
 ## Examples
 
@@ -28,7 +29,7 @@
         cluster_id: "cluster-123"
         pull_secret: "{{ lookup('file', 'path/to/pull-secret.txt') }}"
         offline_token: "{{ lookup('file', 'path/to/offline_token.txt') }}" 
-      register: all_cluster_info
+      register: cluster_info
 
 ```
 
