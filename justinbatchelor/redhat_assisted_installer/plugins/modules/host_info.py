@@ -13,49 +13,56 @@ __metaclass__ = type
 DOCUMENTATION = r'''
 ---
 module: host_info
-short_description: Communicate with the Red Hat Assisted Installer to get information about all or specific OpenShift agents
+short_description: Retrieve information about OpenShift agents from Red Hat Assisted Installer
 version_added: "1.0.0"
 description: >
-  This module allows you to retrieve information about OpenShift agents from the Red Hat Assisted Installer,
-  either for all hosts within an infrastructure environment or for a specific host.
+  This module communicates with the Red Hat Assisted Installer to gather information about OpenShift agents.
+  It can retrieve data for all hosts within a specified infrastructure environment or a specific host.
 options:
   infra_env_id:
     description:
-      - ID for the assisted installer managed infrastructure environment.
+      - The ID of the infrastructure environment managed by the assisted installer.
     type: str
     required: true
   host_id:
     description:
-      - ID for the assisted installer managed host associated with the infra_env_id.
+      - The ID of the host managed by the assisted installer within the specified infrastructure environment.
     type: str
     required: false
+  offline_token:
+    description:
+      - Offline token for authentication with the Red Hat Assisted Installer API.
+    type: str
+    required: false
+    no_log: true
+  pull_secret:
+    description:
+      - Pull secret for authentication with the Red Hat Assisted Installer API.
+    type: str
+    required: false
+    no_log: true
 author:
   - Justin Batchelor (@justinbatchelor)
 '''
 
 EXAMPLES = r'''
-- name: Get all hosts info from infra_env
+- name: Retrieve information for all hosts in the specified infrastructure environment
   justinbatchelor.redhat_assisted_installer.host_info:
     infra_env_id: "your_infra_env_id"
   register: hosts
 
-- debug:
-    msg: "{{ hosts }}"
-
-- name: Get specific host info
+- name: Retrieve information for a specific host
   justinbatchelor.redhat_assisted_installer.host_info:
     infra_env_id: "your_infra_env_id"
     host_id: "your_host_id"
   register: host
 
-- debug:
-    msg: "{{ host }}"
 '''
 
 RETURN = r'''
 host_info:
   description: >
-    List of host information retrieved from the Red Hat Assisted Installer.
+    A list containing information about the hosts retrieved from the Red Hat Assisted Installer.
   returned: always
   type: list
   elements: dict
@@ -65,13 +72,13 @@ host_info:
       status: "active"
 count:
   description: >
-    The number of hosts returned.
+    The number of hosts returned by the module.
   returned: always
   type: int
   sample: 1
 msg:
   description: >
-    Message indicating the status of the operation.
+    A message indicating the status of the operation.
   returned: always
   type: str
   sample: "Success"
