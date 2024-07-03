@@ -12,7 +12,6 @@ from ..module_utils.tools import *
 __metaclass__ = type
 
 DOCUMENTATION = r'''
----
 '''
 
 EXAMPLES = r'''

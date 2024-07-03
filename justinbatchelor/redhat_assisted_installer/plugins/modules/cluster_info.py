@@ -84,7 +84,7 @@ def run_module():
     # for consumption, for example, in a subsequent task
     result = dict(
         changed=False,
-        cluster_info='',
+        cluster_info=[],
         count='',
         msg='',
 
