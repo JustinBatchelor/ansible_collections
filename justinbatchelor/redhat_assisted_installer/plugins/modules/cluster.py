@@ -440,7 +440,7 @@ def run_module():
         format_module_results(results=result,
                               msg=f"You must specifiy either an cluster ID or a NAME when STATE == {module.params['state']}",
                               changed=True,
-                              result=[],
+                              cluster=[],
                               )
         module.fail_json(**result)
 
@@ -518,8 +518,8 @@ def run_module():
                                  changed=False,
                                  cluster=[])
            module.fail_json(**result)
-    # otherwise the state is absent
-    else:     
+    # otherwise if the state is absent
+    elif module.params['state'] == 'absent':
         if len(filtered_response) == 0:
           format_module_results(results=result,
                                 msg="cluster not found.",
