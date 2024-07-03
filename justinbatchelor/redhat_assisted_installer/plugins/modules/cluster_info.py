@@ -120,8 +120,8 @@ def run_module():
         else:
             api_response = get_cluster(cluster_id=module.params['cluster_id'])
         api_response.raise_for_status()
-        result['cluster_info'] = [api_response.json()] if isinstance(api_response.json, dict) else api_response.json()
-        result['count'] = len([api_response.json()]) if isinstance(api_response.json, dict) else len(api_response.json())
+        result['cluster_info'] = [api_response.json()] if isinstance(api_response.json(), dict) else api_response.json()
+        result['count'] = len([api_response.json()]) if isinstance(api_response.json(), dict) else len(api_response.json())
         result['msg'] = "Success"
         module.exit_json(**result) 
 
