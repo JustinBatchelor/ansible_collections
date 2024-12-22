@@ -15,7 +15,7 @@ DOCUMENTATION = r'''
 ---
 module: cluster_info
 short_description: Retrieve information about OpenShift clusters managed by the Red Hat Assisted Installer
-version_added: "1.0.0"
+version_added: "0.0.1"
 description: >
   This module allows you to retrieve information about OpenShift clusters from the Red Hat Assisted Installer,
   either for all clusters or for a specific cluster identified by its cluster_id.

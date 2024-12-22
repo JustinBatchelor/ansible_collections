@@ -13,7 +13,7 @@ DOCUMENTATION = r'''
 ---
 module: infra_env_info
 short_description: Get information about all or specific infrastructure environments from the Red Hat Assisted Installer
-version_added: "1.0.0"
+version_added: "0.0.1"
 description: >
   This module allows you to retrieve information about infrastructure environments managed by the Red Hat Assisted Installer,
   either for all environments or for a specific environment identified by its infra_env_id.

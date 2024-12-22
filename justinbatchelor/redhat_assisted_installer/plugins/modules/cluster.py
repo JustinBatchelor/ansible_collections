@@ -17,7 +17,7 @@ DOCUMENTATION = r'''
 ---
 module: cluster
 short_description: Manage OpenShift clusters
-version_added: "1.0.0"
+version_added: "0.0.1"
 description: >
   This module allows managing OpenShift clusters using the Red Hat Assisted Installer API.
 options:

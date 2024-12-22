@@ -18,7 +18,7 @@ short_description: Manage infrastructure environments with Red Hat Assisted Inst
 description:
   - Create, update, and delete infrastructure environments using the Red Hat Assisted Installer.
   - This module interacts with the Red Hat Assisted Installer API.
-version_added: "1.0.0"
+version_added: "0.0.1"
 requirements:
   - requests==2.32.3
   - ansible==10.1.0

@@ -8,10 +8,10 @@ from ansible.module_utils.basic import AnsibleModule
 from ..module_utils.api import *
 from ..module_utils.tools import *
 
-
 __metaclass__ = type
 
 DOCUMENTATION = r'''
+
 '''
 
 EXAMPLES = r'''
@@ -19,8 +19,8 @@ EXAMPLES = r'''
 '''
 
 RETURN = r'''
-
 '''
+
 SUCCESS_GET_CODE = 200
 SUCCESS_POST_CODE = SUCCESS_PATCH_CODE = 201
 SUCCESS_ACTION_CODE = 202
@@ -128,7 +128,7 @@ def run_module():
         module.fail_json(**result)
     
     format_module_results(results=result,
-                          msg=f"Successfully {module.params["state"]} cluster. {filtered_response[0]['id']}",
+                          msg=f"Successfully {module.params['state']} cluster. {filtered_response[0]['id']}",
                           changed=True,
                           cluster=[action_response.json()]
                           )

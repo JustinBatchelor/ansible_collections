@@ -14,7 +14,7 @@ DOCUMENTATION = r'''
 ---
 module: host_info
 short_description: Retrieve information about OpenShift agents from Red Hat Assisted Installer
-version_added: "1.0.0"
+version_added: "0.0.1"
 description: >
   This module communicates with the Red Hat Assisted Installer to gather information about OpenShift agents.
   It can retrieve data for all hosts within a specified infrastructure environment or a specific host.
